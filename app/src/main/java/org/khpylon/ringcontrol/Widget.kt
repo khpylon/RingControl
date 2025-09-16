@@ -11,14 +11,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.media.AudioManager
-import android.provider.Settings
 import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 
 
-open class Widget: AppWidgetProvider() {
+open class Widget : AppWidgetProvider() {
     private val CHANGE_RINGER_MODE = "TOUCH"
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -26,34 +25,16 @@ open class Widget: AppWidgetProvider() {
         val manager = AppWidgetManager.getInstance(context)
         val ids = manager.getAppWidgetIds(ComponentName(context, this.javaClass))
         when (intent.action) {
-            AppWidgetManager.ACTION_APPWIDGET_UPDATE ->  onUpdate(context, manager, ids)
-//            "REFRESH" -> {
-//                val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
-//                val currentMode = audioManager.getRingerMode()
-//                val symbol = when (currentMode) {
-//                    AudioManager.RINGER_MODE_NORMAL -> R.drawable.outline_volume_up_48_black
-//                    AudioManager.RINGER_MODE_VIBRATE -> R.drawable.outline_volume_mute_48_black
-//                    AudioManager.RINGER_MODE_SILENT -> R.drawable.outline_volume_off_48_black
-//                    else -> R.drawable.dnd_48
-//                }
-//
-//                val views = RemoteViews(context.packageName, R.layout.widget)
-//                views.setImageViewResource(R.id.logo, symbol)
-//                manager.updateAppWidget(ids[0], views)
-//            }
-//            "DND_ON" -> {
-//                val views = RemoteViews(context.packageName, R.layout.widget)
-//                views.setImageViewResource(R.id.logo, R.drawable.dnd_48)
-//                manager.updateAppWidget(ids[0], views)
-//            }
+            AppWidgetManager.ACTION_APPWIDGET_UPDATE -> onUpdate(context, manager, ids)
             CHANGE_RINGER_MODE -> {
-                val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                val notificationManager =
+                    context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
                 // the below code is to check the permission that the access notification policy settings from users device..
                 if (!notificationManager.isNotificationPolicyAccessGranted) {
                     Toast.makeText(
                         context,
-                        "Widget requires Do Not Disturb access to be enabled.",
+                        context.getString(R.string.widget_needs_dnd_permissions),
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
@@ -85,8 +66,10 @@ open class Widget: AppWidgetProvider() {
     private fun getPendingIntent(context: Context, value: Int): PendingIntent {
         val intent = Intent(context, javaClass)
         intent.action = CHANGE_RINGER_MODE
-        return PendingIntent.getBroadcast(context, value, intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT )
+        return PendingIntent.getBroadcast(
+            context, value, intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
     }
 
     private fun updateAppWidget(
@@ -94,10 +77,12 @@ open class Widget: AppWidgetProvider() {
     ) {
         val views = RemoteViews(context.packageName, R.layout.widget)
 
-        views.setOnClickPendingIntent(R.id.logo,
-            getPendingIntent(context, 0))
+        views.setOnClickPendingIntent(
+            R.id.logo,
+            getPendingIntent(context, 0)
+        )
 
-        val originalBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.outline_volume_up_48_black)
+//        val originalBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.outline_volume_up_48_black)
 
         // Set color of text
         views.setTextColor(R.id.description, Color.White.toArgb())
