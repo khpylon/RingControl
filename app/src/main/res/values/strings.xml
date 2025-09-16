@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Ring Control</string>
     <string name="app_widget_description">Ring Control</string>
+    <string name="app_explanation">This is a basic application which allows the user to change ring
+        modes using a widget.  There isn\'t much more to say.</string>
+    <string name="dnd_permissions">Enable \"Do not disturb\" permissions</string>
 </resources>
