@@ -12,20 +12,20 @@ class AudioChangeReceiver : BroadcastReceiver() {
         val notManager = context?.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val currentMode = notManager.currentInterruptionFilter
         val action = intent?.action
-        when ( action ) {
-            android.media.AudioManager.RINGER_MODE_CHANGED_ACTION ->  "2"
-            NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED -> "1"
-        }
-        Log.d("943TSX","AudioChangeReceiver received $action")
+//        when ( action ) {
+//            android.media.AudioManager.RINGER_MODE_CHANGED_ACTION ->  "2"
+//            NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED -> "1"
+//        }
+        Log.d(Constants.LOGTAG,"AudioChangeReceiver received $action")
         when (currentMode) {
             // DND off
             NotificationManager.INTERRUPTION_FILTER_ALL,
             // DND on
             NotificationManager.INTERRUPTION_FILTER_PRIORITY
                 -> Widget.updateWidget(context)
-////            NotificationManager.INTERRUPTION_FILTER_NONE -> 0
-////            NotificationManager.INTERRUPTION_FILTER_ALARMS -> 0
-////            NotificationManager.INTERRUPTION_FILTER_UNKNOWN -> 0
+            NotificationManager.INTERRUPTION_FILTER_ALARMS,
+            NotificationManager.INTERRUPTION_FILTER_NONE,
+            NotificationManager.INTERRUPTION_FILTER_UNKNOWN -> TODO()
         }
     }
 }
