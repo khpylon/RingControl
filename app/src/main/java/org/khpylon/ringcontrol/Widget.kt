@@ -9,12 +9,19 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.drawable.Drawable
 import android.media.AudioManager
 import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.createBitmap
 
 
 open class Widget : AppWidgetProvider() {
@@ -72,6 +79,31 @@ open class Widget : AppWidgetProvider() {
         )
     }
 
+    private fun drawBitmap (drawable: Drawable, color: Int) : Bitmap {
+        val bmp = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
+
+        val canvas = Canvas(bmp)
+
+        val bmp2 = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
+        val canvas2 = Canvas(bmp2)
+
+        val paint = Paint()
+
+        // Fill with the primary color mask
+        paint.color = color
+        paint.alpha = 0xff
+        paint.style = Paint.Style.FILL
+        canvas.drawPaint(paint)
+
+        // Draw the image
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas2)
+        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
+        canvas.drawBitmap(bmp2, 0f, 0f, paint)
+
+        return bmp
+    }
+
     private fun updateAppWidget(
         context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int
     ) {
@@ -82,7 +114,8 @@ open class Widget : AppWidgetProvider() {
             getPendingIntent(context, 0)
         )
 
-//        val originalBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.outline_volume_up_48_black)
+        val drawable = AppCompatResources.getDrawable(context, R.drawable.background) as Drawable
+        views.setImageViewBitmap(R.id.background, drawBitmap(drawable, Color.Green.toArgb()))
 
         // Set color of text
         views.setTextColor(R.id.description, Color.White.toArgb())
@@ -91,12 +124,14 @@ open class Widget : AppWidgetProvider() {
         val currentMode = audioManager.getRingerMode()
 
         val symbol = when (currentMode) {
-            AudioManager.RINGER_MODE_NORMAL -> R.drawable.outline_volume_up_48_black
+            AudioManager.RINGER_MODE_NORMAL -> R.drawable.outline_volume_up_48
             AudioManager.RINGER_MODE_VIBRATE -> R.drawable.outline_mobile_vibrate_48
-            else -> R.drawable.outline_volume_off_48_black
+            else -> R.drawable.outline_volume_off_48
         }
 
-        views.setImageViewResource(R.id.logo, symbol)
+        val drawable2 = AppCompatResources.getDrawable(context, symbol) as Drawable
+        views.setImageViewBitmap(R.id.logo, drawBitmap(drawable2, Color.Black.toArgb()))
+
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
