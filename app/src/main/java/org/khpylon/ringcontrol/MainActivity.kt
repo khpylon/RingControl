@@ -2,12 +2,8 @@ package org.khpylon.ringcontrol
 
 import android.app.Activity.NOTIFICATION_SERVICE
 import android.app.NotificationManager
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.drawable.Drawable
-import android.media.AudioManager
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity

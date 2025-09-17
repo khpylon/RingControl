@@ -37,15 +37,4 @@ class Storage(val context: Context) {
             commitWait(edit)
         }
 
-    var textColor: Int
-        get() {
-            val pref = context.getSharedPreferences(TAG, Context.MODE_PRIVATE)
-            return pref.getInt("txtColor", Color.White.toArgb())
-        }
-        set(color) {
-            val edit = context.getSharedPreferences(TAG, Context.MODE_PRIVATE).edit()
-            edit.putInt("txtColor", color or (0xff shl 24))
-            commitWait(edit)
-        }
-
 }
