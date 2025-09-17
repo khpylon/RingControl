@@ -41,11 +41,18 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.media.RINGER_MODE_CHANGED" />
-                <action android:name="android.app.action.INTERRUPTION_FILTER_CHANGED" />
+<!--                <action android:name="android.app.action.INTERRUPTION_FILTER_CHANGED" />-->
             </intent-filter>
         </receiver>
-
-
+        <receiver
+            android:name=".BootComplete"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
     </application>
-
 </manifest>
