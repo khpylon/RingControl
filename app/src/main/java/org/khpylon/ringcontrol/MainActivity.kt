@@ -60,26 +60,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.runtime.key
 
 class MainActivity : ComponentActivity() {
-
-//    override fun onPause() {
-//        Widget.updateWidget(applicationContext)
-//        super.onPause()
-//    }
-
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val context = applicationContext
-        context.registerReceiver(object : BroadcastReceiver() {
 
-            // Register a receiver to detect external changes to the ringer
-            override fun onReceive(context: Context, intent: Intent) {
-                if (intent.action == AudioManager.RINGER_MODE_CHANGED_ACTION) {
-                    Widget.updateWidget(context)
-                }
-            }
-        }, IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION))
+        // This only works in the foreground for Android 8 and above
+//        context.registerReceiver(object : BroadcastReceiver() {
+//            // Register a receiver to detect external changes to the ringer
+//            override fun onReceive(context: Context, intent: Intent) {
+//                if (intent.action == AudioManager.RINGER_MODE_CHANGED_ACTION) {
+//                    Widget.updateWidget(context)
+//                }
+//            }
+//        }, IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION))
 
         enableEdgeToEdge()
         setContent {
