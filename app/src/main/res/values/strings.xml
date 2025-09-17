@@ -3,6 +3,6 @@
     <string name="app_widget_description">Ring Control</string>
     <string name="app_explanation">This is a basic application which allows the user to change ring
         modes using a widget.  There isn\'t much more to say.</string>
-    <string name="dnd_permissions">Enable \"Do not disturb\" permissions</string>
-    <string name="widget_needs_dnd_permissions">Widget requires \"Do Not Disturb\" access to be enabled.</string>
+    <string name="dnd_permissions">Enable \"Modes access\" permission</string>
+    <string name="widget_needs_dnd_permissions">This widget requires \"Modes access\" to be enabled.</string>
 </resources>

@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "org.khpylon.ringcontrol"
-        minSdk = 31
+        minSdk = 30
         targetSdk = 36
         versionCode = 2
         versionName = "1.1"
@@ -50,6 +50,9 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
+    implementation(libs.compose.colorpicker)
+    implementation(libs.compose.colorpicker)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
