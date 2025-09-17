@@ -241,9 +241,9 @@ fun MainApplication(modifier: Modifier = Modifier) {
         {
 
             // Set up everything for the radio buttons
-            val whiteString = "Foreground"
-            val blackString = "Background"
-            val radioOptions = listOf(whiteString, blackString)
+            val foregroundString = stringResource(R.string.background_string)
+            val backgroundString = stringResource(R.string.foreground_string)
+            val radioOptions = listOf(foregroundString, backgroundString)
 
             var selectedOption by remember {
                 mutableStateOf( radioOptions[selectedIndex] )

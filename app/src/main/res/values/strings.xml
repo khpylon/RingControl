@@ -6,4 +6,6 @@
     <string name="dnd_permissions">Enable \"Modes access\" permission</string>
     <string name="widget_needs_dnd_permissions">This widget requires \"Modes access\" to be enabled.</string>
     <string name="ringer">Ringer</string>
+    <string name="background_string">Background</string>
+    <string name="foreground_string">Foreground</string>
 </resources>
