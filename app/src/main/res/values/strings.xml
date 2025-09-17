@@ -5,4 +5,5 @@
         modes using a widget.  There isn\'t much more to say.</string>
     <string name="dnd_permissions">Enable \"Modes access\" permission</string>
     <string name="widget_needs_dnd_permissions">This widget requires \"Modes access\" to be enabled.</string>
+    <string name="ringer">Ringer</string>
 </resources>
