@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
 //            }
 //        }, IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION))
 
+        
         enableEdgeToEdge()
         setContent {
             RingControlTheme {
@@ -83,7 +84,7 @@ class MainActivity : ComponentActivity() {
                     }, modifier = Modifier.fillMaxSize()
                 )
                 { innerPadding ->
-                    MainApplication (
+                    MainApplication(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -94,16 +95,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//        // Convert a hex string to an Int
-//        try {
-//            val value = "#00ff00"
-//            val x = value.substring(1).toInt(16)
-//            val objNum = Integer.valueOf(value.substring(1), 16)
-//        } catch (e: NumberFormatException) {
-//            System.err.println("NumberFormatException caught: " + e.message);
-//        }
-
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 fun MainApplication(modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -112,6 +103,9 @@ fun MainApplication(modifier: Modifier = Modifier) {
 
     val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     var permissions by remember { mutableStateOf(notificationManager.isNotificationPolicyAccessGranted) }
+    var isTextVisible by remember { mutableStateOf(storage.textVisible) }
+    var isTextDescriptive by remember { mutableStateOf(storage.textDescription) }
+
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
@@ -152,6 +146,50 @@ fun MainApplication(modifier: Modifier = Modifier) {
             )
         }
 
+        // Toggle visibility of text on widget
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+        )
+        {
+            Text(
+                text = "Visible description",
+                modifier = Modifier
+                    .padding(10.dp)
+            )
+            Spacer(Modifier.weight(1f))  // separate text and toggle switch
+            Switch(
+                checked = isTextVisible,
+                onCheckedChange = {
+                    isTextVisible = it
+                    storage.textVisible = isTextVisible
+                    Widget.updateWidget(context)
+                }
+            )
+        }
+
+        // Toggle description of text on widget
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+        )
+        {
+            Text(
+                text = "Enable mode description",
+                modifier = Modifier
+                    .padding(10.dp)
+            )
+            Spacer(Modifier.weight(1f))  // separate text and toggle switch
+            Switch(
+                checked = isTextDescriptive,
+                onCheckedChange = {
+                    isTextDescriptive = it
+                    storage.textDescription = isTextDescriptive
+                    Widget.updateWidget(context)
+                }
+            )
+        }
+
         // This seems like a kludge; it forces HexColorPicker and BrightnessSlider to reposition the wheel
         var recomposeColorPicker by remember { mutableStateOf(false) }
         var bgColor by remember { mutableIntStateOf(storage.backgroundColor and 0xffffff) }
@@ -164,7 +202,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
         {
             val controller = rememberColorPickerController()
 
-            Column() {
+            Column {
                 key(recomposeColorPicker) {
                     HsvColorPicker(
                         modifier = Modifier
@@ -200,7 +238,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
                     R.drawable.background
                 ) as Drawable
 
-                val bgBitmap = Widget.drawBitmap(bgDrawable,bgColor)
+                val bgBitmap = Widget.drawBitmap(bgDrawable, bgColor)
 
                 Image(
                     bitmap = bgBitmap.asImageBitmap(),
@@ -215,7 +253,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
                     R.drawable.outline_volume_off_48
                 ) as Drawable
 
-                val bitmap = Widget.drawBitmap(drawable,fgColor).asImageBitmap()
+                val bitmap = Widget.drawBitmap(drawable, fgColor).asImageBitmap()
                 Image(
                     bitmap = bitmap,
                     modifier = Modifier
@@ -242,7 +280,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
             val radioOptions = listOf(foregroundString, backgroundString)
 
             var selectedOption by remember {
-                mutableStateOf( radioOptions[selectedIndex] )
+                mutableStateOf(radioOptions[selectedIndex])
             }
 
             radioOptions.forEach { buttonName ->
@@ -252,11 +290,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
                         selectedOption = buttonName
                         val index = radioOptions.indexOf(selectedOption)
                         selectedIndex = index
-                        if( selectedIndex == 0) {
-                            initialColor = bgColor and 0xffffff
-                        } else {
-                            initialColor = fgColor and 0xffffff
-                        }
+                        initialColor = (if (selectedIndex == 0) bgColor else fgColor) and 0xffffff
                         recomposeColorPicker = !recomposeColorPicker
                     },
                     modifier = Modifier
@@ -304,12 +338,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
                     // Reload the initial values
                     fgColor = storage.foregroundColor
                     bgColor = storage.backgroundColor
-                    if(selectedIndex == 0) {
-                        initialColor = bgColor
-                    } else {
-                        initialColor = fgColor
-
-                    }
+                    initialColor = if (selectedIndex == 0) bgColor else fgColor
                     recomposeColorPicker = !recomposeColorPicker
                 },
                 colors = buttonColors,
@@ -321,7 +350,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
             }
         }
 
-        }
+    }
 }
 
 @Preview(showBackground = true)

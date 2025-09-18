@@ -16,6 +16,7 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.drawable.Drawable
 import android.media.AudioManager
+import android.view.View
 import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
@@ -96,8 +97,22 @@ open class Widget : AppWidgetProvider() {
         // Set color of text
         views.setTextColor(R.id.description, Color.White.toArgb())
 
+        // Display text if visible
+        views.setViewVisibility(R.id.description, if (storage.textVisible) View.VISIBLE else View.GONE)
+
         val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
         val currentMode = audioManager.getRingerMode()
+
+        val description = if (storage.textDescription) {
+            when (currentMode) {
+                AudioManager.RINGER_MODE_NORMAL -> "Normal"
+                AudioManager.RINGER_MODE_VIBRATE -> "Vibrate"
+                else -> "Silent"
+            }
+        } else {
+            "Ringer"
+        }
+        views.setTextViewText(R.id.description, description)
 
         val symbol = when (currentMode) {
             AudioManager.RINGER_MODE_NORMAL -> R.drawable.outline_volume_up_48
@@ -132,7 +147,7 @@ open class Widget : AppWidgetProvider() {
         }
 
         @JvmStatic
-        fun drawBitmap (drawable: Drawable, color: Int) : Bitmap {
+        fun drawBitmap(drawable: Drawable, color: Int): Bitmap {
             val bmp = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
 
             val canvas = Canvas(bmp)

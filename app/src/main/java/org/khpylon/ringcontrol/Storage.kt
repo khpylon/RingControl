@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 
-class Storage(val context: Context) {
+class Storage(private val context: Context) {
     private fun commitWait(edit: SharedPreferences.Editor) {
         for (i in 0..9) {
             if (edit.commit()) {
@@ -34,6 +34,28 @@ class Storage(val context: Context) {
         set(color) {
             val edit = context.getSharedPreferences(TAG, Context.MODE_PRIVATE).edit()
             edit.putInt("fgColor", color or (0xff shl 24))
+            commitWait(edit)
+        }
+
+    var textVisible: Boolean
+        get() {
+            val pref = context.getSharedPreferences(TAG, Context.MODE_PRIVATE)
+            return pref.getBoolean("textVisible", true)
+        }
+        set(visibility) {
+            val edit = context.getSharedPreferences(TAG, Context.MODE_PRIVATE).edit()
+            edit.putBoolean("textVisible", visibility)
+            commitWait(edit)
+        }
+
+    var textDescription: Boolean
+        get() {
+            val pref = context.getSharedPreferences(TAG, Context.MODE_PRIVATE)
+            return pref.getBoolean("textDescription", true)
+        }
+        set(descriptive) {
+            val edit = context.getSharedPreferences(TAG, Context.MODE_PRIVATE).edit()
+            edit.putBoolean("textDescription", descriptive)
             commitWait(edit)
         }
 
