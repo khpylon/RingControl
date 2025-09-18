@@ -1,9 +1,13 @@
 package org.khpylon.ringcontrol
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity.NOTIFICATION_SERVICE
 import android.app.NotificationManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -54,8 +58,10 @@ import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.key
+import androidx.core.content.ContextCompat
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("NewApi")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,7 +78,20 @@ class MainActivity : ComponentActivity() {
 //            }
 //        }, IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION))
 
-        
+        // Android 13 and later require user to allow posting of notifications
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                if (shouldShowRequestPermissionRationale( Manifest.permission.POST_NOTIFICATIONS )
+                ) {
+                    registerForActivityResult(ActivityResultContracts.RequestPermission()) { }.launch(
+                        Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        }
+
         enableEdgeToEdge()
         setContent {
             RingControlTheme {

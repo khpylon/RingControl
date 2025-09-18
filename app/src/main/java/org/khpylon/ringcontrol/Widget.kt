@@ -32,19 +32,26 @@ open class Widget : AppWidgetProvider() {
         val manager = AppWidgetManager.getInstance(context)
         val ids = manager.getAppWidgetIds(ComponentName(context, this.javaClass))
         when (intent.action) {
+
+            // Update all widgets
             AppWidgetManager.ACTION_APPWIDGET_UPDATE -> onUpdate(context, manager, ids)
+
+            // Change the ringer mode
             CHANGE_RINGER_MODE -> {
                 val notificationManager =
                     context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-                // the below code is to check the permission that the access notification policy settings from users device..
+                // If no permission, show a toast message
                 if (!notificationManager.isNotificationPolicyAccessGranted) {
                     Toast.makeText(
                         context,
                         context.getString(R.string.widget_needs_dnd_permissions),
                         Toast.LENGTH_SHORT
                     ).show()
-                } else {
+                } else 
+                
+                // Otherwise cycle to the next mode and update all widgets
+                {
                     val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
                     val currentMode = audioManager.getRingerMode()
 
@@ -56,29 +63,19 @@ open class Widget : AppWidgetProvider() {
                         }
                     )
                     onUpdate(context, manager, ids)
-//                    Toast.makeText(
-//                        context,
-//                        when (currentMode) {
-//                            AudioManager.RINGER_MODE_NORMAL -> "Vibrate"
-//                            AudioManager.RINGER_MODE_VIBRATE -> "Silent"
-//                            else -> "Normal"
-//                        },
-//                        Toast.LENGTH_SHORT
-//                    ).show()
                 }
             }
         }
     }
 
-    private fun getPendingIntent(context: Context, value: Int): PendingIntent {
+    private fun getPendingIntent(context: Context): PendingIntent {
         val intent = Intent(context, javaClass)
         intent.action = CHANGE_RINGER_MODE
         return PendingIntent.getBroadcast(
-            context, value, intent,
+            context, 0, intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
-
 
     private fun updateAppWidget(
         context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int
@@ -86,43 +83,49 @@ open class Widget : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.widget)
         val storage = Storage(context)
 
+        // When the widget is clicked, generate an onUpdate broadcast
         views.setOnClickPendingIntent(
             R.id.logo,
-            getPendingIntent(context, 0)
+            getPendingIntent(context)
         )
 
-        val drawable = AppCompatResources.getDrawable(context, R.drawable.background) as Drawable
+        // Draw the background of the widget
+        var drawable = AppCompatResources.getDrawable(context, R.drawable.background) as Drawable
         views.setImageViewBitmap(R.id.background, drawBitmap(drawable, storage.backgroundColor))
 
         // Set color of text
         views.setTextColor(R.id.description, Color.White.toArgb())
 
         // Display text if visible
-        views.setViewVisibility(R.id.description, if (storage.textVisible) View.VISIBLE else View.GONE)
+        views.setViewVisibility(
+            R.id.description,
+            if (storage.textVisible) View.VISIBLE else View.GONE
+        )
 
+        // Get the description for the widget's text
         val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
         val currentMode = audioManager.getRingerMode()
-
         val description = if (storage.textDescription) {
             when (currentMode) {
-                AudioManager.RINGER_MODE_NORMAL -> "Normal"
-                AudioManager.RINGER_MODE_VIBRATE -> "Vibrate"
-                else -> "Silent"
+                AudioManager.RINGER_MODE_NORMAL -> context.getString(R.string.normal_description)
+                AudioManager.RINGER_MODE_VIBRATE -> context.getString(R.string.vibrate_description)
+                else -> context.getString(R.string.silent_description)
             }
         } else {
-            "Ringer"
+            context.getString(R.string.ringer_description)
         }
         views.setTextViewText(R.id.description, description)
 
+        // Draw the foreground of the widget
         val symbol = when (currentMode) {
             AudioManager.RINGER_MODE_NORMAL -> R.drawable.outline_volume_up_48
             AudioManager.RINGER_MODE_VIBRATE -> R.drawable.outline_mobile_vibrate_48
             else -> R.drawable.outline_volume_off_48
         }
+        drawable = AppCompatResources.getDrawable(context, symbol) as Drawable
+        views.setImageViewBitmap(R.id.logo, drawBitmap(drawable, storage.foregroundColor))
 
-        val drawable2 = AppCompatResources.getDrawable(context, symbol) as Drawable
-        views.setImageViewBitmap(R.id.logo, drawBitmap(drawable2, storage.foregroundColor))
-
+        // Post the updates
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
@@ -146,26 +149,30 @@ open class Widget : AppWidgetProvider() {
             context.sendBroadcast(updateIntent)
         }
 
+        // Set the color on a widget component
         @JvmStatic
         fun drawBitmap(drawable: Drawable, color: Int): Bitmap {
-            val bmp = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
 
+            // Create a bitmap and canvas the same size as the drawable
+            val bmp = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
             val canvas = Canvas(bmp)
 
+            // Create secondary bitmap and canvas
             val bmp2 = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
             val canvas2 = Canvas(bmp2)
 
+            // Fill with primary bitmap with the desired color
             val paint = Paint()
-
-            // Fill with the primary color mask
             paint.color = color
             paint.alpha = 0xff
             paint.style = Paint.Style.FILL
             canvas.drawPaint(paint)
 
-            // Draw the image
+            // Draw the image on the secondary canvas
             drawable.setBounds(0, 0, canvas.width, canvas.height)
             drawable.draw(canvas2)
+
+            // Merge the image and the color
             paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
             canvas.drawBitmap(bmp2, 0f, 0f, paint)
 
