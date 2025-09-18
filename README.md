@@ -18,3 +18,11 @@ At this time I haven't added any functionality in the app to generate crash repo
 1. a file named *ringcontrol_logcat-<datetime>.txt* will be written to the *Downloads* filter of your phone
 2. you will upload that file to ["Issues"](https://github.com/khpylon/RIngControl/issues) on GitHub
 3. I'll try to figure out why the app crashed and how to fix it
+
+## Credits
+
+The [ColorPickerView](https://github.com/skydoves/ColorPickerView) was written by skydoves (Jawwoong Eum), and copyrighted 2017 under the [Apache Licence, Version 2.0] (https://github.com/skydoves/ColorPickerView#license).
+
+## Disclaimer
+
+I am NOT liable for any kind of damage (special, direct, indirect, consequential or whatsoever) resulting from the use of this app. 
