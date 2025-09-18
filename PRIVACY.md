@@ -1,25 +1,39 @@
-**Privacy Policy**
+Privacy Policy
+----------------
 
-This privacy policy applies to the Ring Control app (hereby referred to as "Application") for mobile devices as a free service. This service is intended for use "AS IS".
+### Introduction
+This privacy policy is intended to help you understand what information we collect, how we uses it, and what choices you have.
 
-**Information Collection and Use**
+This app is free. This SERVICE is provided at no cost and is intended for use as-is.
 
-The Application uses Google Crashlytics and Analytics to help fix bugs, and to learn which countries users are from. All data is anonymous and location information is approximate.
+If you choose to use this Service, then you agree to the collection and use of information in relation with this policy.
 
-**Children**
+The Personal Information that we collect are used for providing and improving the Service. We will not use or share your information with anyone except as described in this Privacy Policy.  
+The terms used in this Privacy Policy have the same meanings as in the Terms and Conditions, which is accessible in our GitHub site (https://github.com/khpylon/RingControl), unless otherwise defined in this Privacy Policy.
 
-The Application does not solicit data from or market to children under the age of 13.
+### Information Collection and Use
+In order to access information about your vehicle, we require you to provide your credentials (username and password) for your FordPass account.  This information is only stored on your device, in encrypted form,
+if "Save log-in credentials" is enabled under "Settings".  The credentials are transmitted over the Internet using HTTPS/SSL connections.  
+Credentials are deleted when "Save log-in credentials" is disabled.
 
-**Changes**
+### Cookies
+The app does not use cookies.
 
-This Privacy Policy may be updated from time to time for any reason.  You are advised to consult this Privacy Policy regularly for any changes, as continued use is deemed approval of all changes.
+### Location Information
+The app does not use location information of your phone.  The app does retrieve your vehicle's location information, if available, and displays it on the widget.  This information is stored on your phone.
 
-This Privacy Policy is effective as of 2025-09-18
+### Device Information
+The app does not collect information about your device.  It will collect information about the performance of the app, including Internet transmissions, when "Enable logging" is enabled under "Settings".  This information
+is only stored on your phone and not transmitted to anyone.
 
-**Your Consent**
+### Security
+We value your trust in providing us your Personal Information, thus we are striving to use commercially acceptable means of protecting it.  But remember that no method of transmission over the internet, or method of electronic storage is 100% secure and reliable, and we cannot guarantee its absolute security.
 
-By using the Application, you are consenting to the processing of your information as set forth in this Privacy Policy now and as amended by us.
+### Children’s Privacy
+This Service does not address anyone under the age of 13, nor do we knowingly collect personal identifiable information from children under the age of 13.
 
-**Contact Us**
+### Changes to This Privacy Policy
+We may update our Privacy Policy from time to time. Thus, you are advised to review this page periodically for any changes. We will notify you of any changes by posting the new Privacy Policy on this page. These changes are effective immediately, after they are posted on this page.
 
-If you have any questions regarding privacy while using the Application, or have questions about the practices, please contact the Service Provider via email at khpylon@gmail.com.
+### Contact Us
+If you have any questions or suggestions about our Privacy Policy, do not hesitate to contact us through Google Play services or our GitHub site (https://github.com/khpylon/RingControl).
