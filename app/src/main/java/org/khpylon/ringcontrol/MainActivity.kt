@@ -6,11 +6,17 @@ import android.app.Activity.NOTIFICATION_SERVICE
 import android.app.NotificationManager
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.icu.text.MessageFormat
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -63,6 +69,19 @@ import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import org.khpylon.ringcontrol.ui.theme.RingControlTheme
+import java.io.BufferedReader
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.OutputStream
+import java.nio.charset.StandardCharsets
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("NewApi")
@@ -71,6 +90,25 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val context = applicationContext
+
+        // Older versions require permission to write log files
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE) ) {
+                    registerForActivityResult(ActivityResultContracts.RequestPermission()) { }.launch(
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    )
+                }
+            }
+        }
+
+        val crashMessage = checkLogcat(context)
+        if (crashMessage != null) {
+            Toast.makeText(context, crashMessage, Toast.LENGTH_SHORT).show()
+        }
 
         // This only works in the foreground for Android 8 and above
 //        context.registerReceiver(object : BroadcastReceiver() {
@@ -82,14 +120,14 @@ class MainActivity : ComponentActivity() {
 //            }
 //        }, IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION))
 
+
         // Android 13 and later require user to allow posting of notifications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this, Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
-                ) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) ) {
                     registerForActivityResult(ActivityResultContracts.RequestPermission()) { }.launch(
                         Manifest.permission.POST_NOTIFICATIONS
                     )
@@ -125,6 +163,96 @@ class MainActivity : ComponentActivity() {
         finish()
     }
 }
+
+private fun checkLogcat(context: Context): String? {
+    try {
+        // Dump the crash buffer and exit
+        val process = Runtime.getRuntime().exec("logcat -d -b crash")
+        val bufferedReader = BufferedReader(
+            InputStreamReader(process.inputStream)
+        )
+        val log = java.lang.StringBuilder()
+        var line: String?
+        while (bufferedReader.readLine().also { line = it } != null) {
+            log.append("${line}\n")
+        }
+
+        // If we find something, write to logcat.txt file
+        if (log.length > 0) {
+            val inStream: InputStream = ByteArrayInputStream(
+                log.toString().toByteArray(
+                    StandardCharsets.UTF_8
+                )
+            )
+            val outputFilename = writeExternalFile(
+                context,
+                inStream,
+                "ringcontrol_logcat-",
+                "text/plain"
+            )
+
+            // Clear the crash log.
+            Runtime.getRuntime().exec("logcat -c")
+            return MessageFormat.format(context.getString(R.string.logcat_crashfile_formatstring), outputFilename)
+        }
+    } catch (_: IOException) {
+    }
+    return null
+}
+
+private fun writeExternalFile(
+    context: Context,
+    inStream: InputStream,
+    baseFilename: String,
+    mimeType: String?
+): String {
+    val time = LocalDateTime.now(ZoneId.systemDefault())
+    val outputFilename =
+        baseFilename + time.format(DateTimeFormatter.ofPattern("MM-dd-HH:mm:ss", Locale.US))
+    try {
+        val outStream: OutputStream?
+        val fileCollection: Uri
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            fileCollection =
+                MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val contentValues = ContentValues()
+            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, outputFilename)
+            contentValues.put(MediaStore.Downloads.MIME_TYPE, mimeType)
+            val resolver = context.contentResolver
+            val uri = resolver.insert(fileCollection, contentValues)
+                ?: throw IOException("Couldn't create MediaStore Entry")
+            outStream = resolver.openOutputStream(uri)
+        } else {
+            val extension: String
+            extension = ".txt"
+//                when (mimeType) {
+//                    Constants.APPLICATION_JSON -> ".json"
+//                    Constants.APPLICATION_ZIP -> ".zip"
+//                    Constants.TEXT_HTML -> ".html"
+//                    else -> ".txt"
+//                }
+            val outputFile = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                outputFilename + extension
+            )
+            outputFile.delete()
+            outputFile.createNewFile()
+            outStream = FileOutputStream(outputFile)
+        }
+        outStream?.let {
+//            copyStreams(inStream, outStream)
+            var len: Int
+            val buffer = ByteArray(65536)
+            while (inStream.read(buffer).also { len = it } != -1) {
+                outStream.write(buffer, 0, len)
+            }
+            outStream.close()
+        }
+    } catch (e: IOException) {
+    }
+    return outputFilename
+}
+
 
 @Composable
 fun MainApplication(modifier: Modifier = Modifier) {
@@ -257,7 +385,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
 
             // This seems like a kludge; it forces HexColorPicker and BrightnessSlider to reposition the wheel
             var recomposeColorPicker by remember { mutableStateOf(false) }
-            var bgColor by remember { mutableIntStateOf(storage.backgroundColor ) }
+            var bgColor by remember { mutableIntStateOf(storage.backgroundColor) }
             var fgColor by remember { mutableIntStateOf(storage.foregroundColor and 0xffffff) }
             var initialColor by remember { mutableIntStateOf(bgColor) }
             Row(
@@ -397,8 +525,10 @@ fun MainApplication(modifier: Modifier = Modifier) {
                             storage.foregroundColor = fgColor
                             storage.backgroundColor = bgColor
                             Widget.updateWidget(context)
-                            Toast.makeText(context,
-                                context.getString(R.string.color_changes_saved), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.color_changes_saved), Toast.LENGTH_SHORT
+                            ).show()
                         }
                     },
                     colors = buttonColors,
