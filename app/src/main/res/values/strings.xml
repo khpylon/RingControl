@@ -12,4 +12,6 @@
     <string name="vibrate_description">Vibrate</string>
     <string name="silent_description">Silent</string>
     <string name="ringer_description">Ringer</string>
+    <string name="no_widgets_notice">The options below are disabled until a widget is placed on the screen.</string>
+    <string name="color_changes_saved">Color changes saved.</string>
 </resources>

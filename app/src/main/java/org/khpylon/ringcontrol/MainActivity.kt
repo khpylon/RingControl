@@ -4,12 +4,15 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity.NOTIFICATION_SERVICE
 import android.app.NotificationManager
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -40,11 +43,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
@@ -52,13 +58,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.github.skydoves.colorpicker.compose.AlphaSlider
+import com.github.skydoves.colorpicker.compose.AlphaTile
 import com.github.skydoves.colorpicker.compose.BrightnessSlider
-import org.khpylon.ringcontrol.ui.theme.RingControlTheme
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
-import androidx.compose.ui.Alignment
-import androidx.compose.runtime.key
-import androidx.core.content.ContextCompat
+import org.khpylon.ringcontrol.ui.theme.RingControlTheme
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("NewApi")
@@ -84,10 +90,11 @@ class MainActivity : ComponentActivity() {
                     this, Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                if (shouldShowRequestPermissionRationale( Manifest.permission.POST_NOTIFICATIONS )
+                if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
                 ) {
                     registerForActivityResult(ActivityResultContracts.RequestPermission()) { }.launch(
-                        Manifest.permission.POST_NOTIFICATIONS)
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
                 }
             }
         }
@@ -111,6 +118,13 @@ class MainActivity : ComponentActivity() {
                 Widget.updateWidget(applicationContext)
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Since number of widgets could change while paused, this is an easy way to make sure 
+        // composable doesn't get the wrong info
+        finish()
     }
 }
 
@@ -165,210 +179,254 @@ fun MainApplication(modifier: Modifier = Modifier) {
             )
         }
 
-        // Toggle visibility of text on widget
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-        )
-        {
-            Text(
-                text = "Visible description",
-                modifier = Modifier
-                    .padding(10.dp)
-            )
-            Spacer(Modifier.weight(1f))  // separate text and toggle switch
-            Switch(
-                checked = isTextVisible,
-                onCheckedChange = {
-                    isTextVisible = it
-                    storage.textVisible = isTextVisible
-                    Widget.updateWidget(context)
-                }
-            )
+        // Check whether there are any widgets on the screen
+        val manager = AppWidgetManager.getInstance(context)
+        val myWidgetProvider = ComponentName(context, Widget::class.java)
+        val enabled = manager.getAppWidgetIds(myWidgetProvider).size > 0
+
+        if (!enabled) {
+            Row(modifier = Modifier.fillMaxWidth())
+            {
+                Text(
+                    text = stringResource(R.string.no_widgets_notice),
+                    modifier = Modifier.padding(10.dp)
+                )
+            }
         }
 
-        // Toggle description of text on widget
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-        )
-        {
-            Text(
-                text = "Enable mode description",
+                .alpha(if (enabled) 1.0f else 0.5f)
+        ) {
+            // Toggle visibility of text on widget
+            Row(
                 modifier = Modifier
-                    .padding(10.dp)
+                    .fillMaxWidth()
             )
-            Spacer(Modifier.weight(1f))  // separate text and toggle switch
-            Switch(
-                checked = isTextDescriptive,
-                onCheckedChange = {
-                    isTextDescriptive = it
-                    storage.textDescription = isTextDescriptive
-                    Widget.updateWidget(context)
-                }
-            )
-        }
-
-        // This seems like a kludge; it forces HexColorPicker and BrightnessSlider to reposition the wheel
-        var recomposeColorPicker by remember { mutableStateOf(false) }
-        var bgColor by remember { mutableIntStateOf(storage.backgroundColor and 0xffffff) }
-        var fgColor by remember { mutableIntStateOf(storage.foregroundColor and 0xffffff) }
-        var initialColor by remember { mutableIntStateOf(bgColor) }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-        )
-        {
-            val controller = rememberColorPickerController()
-
-            Column {
-                key(recomposeColorPicker) {
-                    HsvColorPicker(
-                        modifier = Modifier
-                            .size(240.dp)
-                            .align(alignment = Alignment.CenterHorizontally)
-                            .padding(10.dp),
-                        initialColor = Color(initialColor),
-                        controller = controller,
-                        onColorChanged = {
-                            if (selectedIndex == 0) {
-                                bgColor = it.color.toArgb() and 0xffffff
-                            } else {
-                                fgColor = it.color.toArgb() and 0xffffff
-                            }
+            {
+                Text(
+                    text = "Visible description",
+                    modifier = Modifier
+                        .padding(10.dp)
+                )
+                Spacer(Modifier.weight(1f))  // separate text and toggle switch
+                if (enabled) {
+                    Switch(
+                        checked = isTextVisible,
+                        onCheckedChange = {
+                            isTextVisible = it
+                            storage.textVisible = isTextVisible
+                            Widget.updateWidget(context)
                         }
                     )
+                } else {
+                    Switch(
+                        checked = isTextVisible,
+                        onCheckedChange = null
+                    )
 
-                    BrightnessSlider(
-                        modifier = Modifier
-                            .width(240.dp)
-                            .align(alignment = Alignment.CenterHorizontally)
-                            .padding(10.dp)
-                            .height(30.dp),
-                        initialColor = Color(initialColor),
-                        controller = controller,
+                }
+            }
+
+            // Toggle description of text on widget
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+            {
+                Text(
+                    text = "Enable mode description",
+                    modifier = Modifier
+                        .padding(10.dp)
+                )
+                Spacer(Modifier.weight(1f))  // separate text and toggle switch
+                if (enabled) {
+                    Switch(
+                        checked = isTextDescriptive,
+                        onCheckedChange = {
+                            isTextDescriptive = it
+                            storage.textDescription = isTextDescriptive
+                            Widget.updateWidget(context)
+                        }
+                    )
+                } else {
+                    Switch(
+                        checked = isTextDescriptive,
+                        onCheckedChange = null
                     )
                 }
             }
 
-            Box {
-                val bgDrawable = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.background
-                ) as Drawable
+            // This seems like a kludge; it forces HexColorPicker and BrightnessSlider to reposition the wheel
+            var recomposeColorPicker by remember { mutableStateOf(false) }
+            var bgColor by remember { mutableIntStateOf(storage.backgroundColor ) }
+            var fgColor by remember { mutableIntStateOf(storage.foregroundColor and 0xffffff) }
+            var initialColor by remember { mutableIntStateOf(bgColor) }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+            {
+                val controller = rememberColorPickerController()
+                controller.enabled = enabled
 
-                val bgBitmap = Widget.drawBitmap(bgDrawable, bgColor)
+                Column {
+                    key(recomposeColorPicker) {
+                        HsvColorPicker(
+                            modifier = Modifier
+                                .size(240.dp)
+                                .align(alignment = Alignment.CenterHorizontally)
+                                .padding(10.dp),
+                            initialColor = Color(initialColor),
+                            controller = controller,
+                            onColorChanged = {
+                                if (enabled) {
+                                    if (selectedIndex == 0) {
+                                        bgColor = it.color.toArgb()
+                                    } else {
+                                        fgColor = it.color.toArgb() and 0xffffff
+                                    }
+                                }
+                            }
+                        )
 
-                Image(
-                    bitmap = bgBitmap.asImageBitmap(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(240.dp)
-                        .padding(10.dp),
-                    contentDescription = "",
-                )
-                val drawable = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.outline_volume_off_48
-                ) as Drawable
+                        BrightnessSlider(
+                            modifier = Modifier
+                                .width(240.dp)
+                                .align(alignment = Alignment.CenterHorizontally)
+                                .padding(10.dp)
+                                .height(30.dp),
+                            initialColor = Color(initialColor),
+                            controller = controller,
+                        )
+                    }
+                }
 
-                val bitmap = Widget.drawBitmap(drawable, fgColor).asImageBitmap()
-                Image(
-                    bitmap = bitmap,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(240.dp)
-                        .padding(20.dp),
-                    contentDescription = "",
-                )
+                Box {
+                    val bgDrawable = AppCompatResources.getDrawable(
+                        context,
+                        R.drawable.background
+                    ) as Drawable
 
+                    val bgBitmap = Widget.drawBitmap(bgDrawable, bgColor)
+
+                    Image(
+                        bitmap = bgBitmap.asImageBitmap(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(240.dp)
+                            .padding(10.dp),
+                        contentDescription = "",
+                    )
+                    val drawable = AppCompatResources.getDrawable(
+                        context,
+                        R.drawable.outline_volume_off_48
+                    ) as Drawable
+
+                    val bitmap = Widget.drawBitmap(drawable, fgColor).asImageBitmap()
+                    Image(
+                        bitmap = bitmap,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(240.dp)
+                            .padding(20.dp),
+                        contentDescription = "",
+                    )
+
+                }
             }
-        }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        )
-        {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            )
+            {
 
-            // Set up everything for the radio buttons
-            val foregroundString = stringResource(R.string.background_string)
-            val backgroundString = stringResource(R.string.foreground_string)
-            val radioOptions = listOf(foregroundString, backgroundString)
+                // Set up everything for the radio buttons
+                val foregroundString = stringResource(R.string.background_string)
+                val backgroundString = stringResource(R.string.foreground_string)
+                val radioOptions = listOf(foregroundString, backgroundString)
 
-            var selectedOption by remember {
-                mutableStateOf(radioOptions[selectedIndex])
+                var selectedOption by remember {
+                    mutableStateOf(radioOptions[selectedIndex])
+                }
+
+                radioOptions.forEach { buttonName ->
+                    RadioButton(
+                        selected = (buttonName == selectedOption),
+                        onClick = {
+                            if (enabled) {
+                                selectedOption = buttonName
+                                val index = radioOptions.indexOf(selectedOption)
+                                selectedIndex = index
+                                initialColor =
+                                    (if (selectedIndex == 0) bgColor else fgColor) and 0xffffff
+                                recomposeColorPicker = !recomposeColorPicker
+                            }
+                        },
+                        modifier = Modifier
+                            .size(30.dp)
+                            .padding(start = 8.dp)
+                    )
+                    Text(
+                        text = buttonName,
+                        modifier = Modifier
+                            .padding(start = 2.dp)
+                            .align(Alignment.CenterVertically)
+                    )
+                }
             }
 
-            radioOptions.forEach { buttonName ->
-                RadioButton(
-                    selected = (buttonName == selectedOption),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+
+                val buttonColors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White
+                )
+
+                // "Save" button
+                Button(
                     onClick = {
-                        selectedOption = buttonName
-                        val index = radioOptions.indexOf(selectedOption)
-                        selectedIndex = index
-                        initialColor = (if (selectedIndex == 0) bgColor else fgColor) and 0xffffff
+                        if (enabled) {
+                            // Store the current color information
+                            storage.foregroundColor = fgColor
+                            storage.backgroundColor = bgColor
+                            Widget.updateWidget(context)
+                            Toast.makeText(context,
+                                context.getString(R.string.color_changes_saved), Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = buttonColors,
+                    shape = RoundedCornerShape(10.dp),
+                ) {
+                    Text(text = "Save")
+                }
+
+                // "Reset" button
+                Button(
+                    onClick = {
+                        // Reload the initial values
+                        fgColor = storage.foregroundColor
+                        bgColor = storage.backgroundColor
+                        initialColor = if (selectedIndex == 0) bgColor else fgColor
                         recomposeColorPicker = !recomposeColorPicker
                     },
+                    colors = buttonColors,
+                    shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
-                        .size(30.dp)
-                        .padding(start = 8.dp)
-                )
-                Text(
-                    text = buttonName,
-                    modifier = Modifier
-                        .padding(start = 2.dp)
-                        .align(Alignment.CenterVertically)
-                )
+                        .padding(horizontal = 8.dp)
+                ) {
+                    Text(text = "Reset")
+                }
             }
         }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-
-            val buttonColors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White
-            )
-
-            // "Save" button
-            Button(
-                onClick = {
-                    // Store the current color information
-                    storage.foregroundColor = fgColor
-                    storage.backgroundColor = bgColor
-                    Widget.updateWidget(context)
-                },
-                colors = buttonColors,
-                shape = RoundedCornerShape(10.dp),
-            ) {
-                Text(text = "Save")
-            }
-
-            // "Reset" button
-            Button(
-                onClick = {
-                    // Reload the initial values
-                    fgColor = storage.foregroundColor
-                    bgColor = storage.backgroundColor
-                    initialColor = if (selectedIndex == 0) bgColor else fgColor
-                    recomposeColorPicker = !recomposeColorPicker
-                },
-                colors = buttonColors,
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-            ) {
-                Text(text = "Reset")
-            }
-        }
-
     }
 }
 
