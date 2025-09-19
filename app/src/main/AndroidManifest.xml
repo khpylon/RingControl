@@ -27,8 +27,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="SWITCH" />
-                <action android:name="REFRESH" />
             </intent-filter>
 
             <meta-data
