@@ -12,8 +12,8 @@ android {
         applicationId = "org.khpylon.ringcontrol"
         minSdk = 30
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.2beta"
+        versionCode = 7
+        versionName = "2025.09.20-12-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,11 +29,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        jvmToolchain(21)
     }
     buildFeatures {
         compose = true
