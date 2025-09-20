@@ -55,39 +55,16 @@ class DetectRingModeChange : Service() {
         startForeground(1, notification)
     }
 
-//    @SuppressLint("WakelockTimeout")
-//    private fun startService(context: Context) {
-//        if (isServiceStarted) return
-//        isServiceStarted = true
-//
-//        // we need this lock so our service gets not affected by Doze Mode
-//        wakeLock =
-//            (getSystemService(POWER_SERVICE) as PowerManager).run {
-//                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "RingChanges::lock").apply {
-//                    acquire()
-//                }
-//            }
-//
-//        context.registerReceiver(object : BroadcastReceiver() {
-//            // Register a receiver to detect external changes to the ringer
-//            override fun onReceive(context: Context, intent: Intent) {
-//                if (intent.action == AudioManager.RINGER_MODE_CHANGED_ACTION) {
-//                    Widget.updateWidget(context)
-//                }
-//            }
-//        }, IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION))
-//    }
-
     private fun createNotification(): Notification {
         val notificationChannelId = "RING CONTROL SERVICE CHANNEL"
 
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val channel = NotificationChannel(
             notificationChannelId,
-            "Ring Control notifications channel",
+            getString(R.string.ring_control_notifications_channel),
             NotificationManager.IMPORTANCE_HIGH
         ).let {
-            it.description = "Ring Control channel"
+            it.description = getString(R.string.ring_control_channel)
             it.enableVibration(false)
             it
         }
@@ -98,8 +75,9 @@ class DetectRingModeChange : Service() {
         }
 
         return Notification.Builder(this,notificationChannelId)
-            .setContentTitle("Ring Control")
-            .setContentText("This is your favorite endless service working")
+            .setSmallIcon(R.drawable.ic_notifier)
+            .setContentTitle(getString(R.string.ring_control_notification_title))
+            .setContentText(getString(R.string.ring_control_notification_text))
             .setContentIntent(pendingIntent)
             .build()
     }
