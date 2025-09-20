@@ -526,6 +526,14 @@ fun MainApplication(modifier: Modifier = Modifier) {
                     Text(text = "Reset")
                 }
             }
+
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = "App version " + BuildConfig.VERSION_NAME,
+                modifier = Modifier
+                    .padding(start = 2.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
         }
     }
 }
