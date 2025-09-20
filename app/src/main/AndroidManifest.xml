@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -37,8 +39,7 @@
             android:name=".AudioChangeReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.media.RINGER_MODE_CHANGED" />
-<!--                <action android:name="android.app.action.INTERRUPTION_FILTER_CHANGED" />-->
+                <action android:name="android.app.action.INTERRUPTION_FILTER_CHANGED" />
             </intent-filter>
         </receiver>
         <receiver
@@ -51,5 +52,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
+
+        <service
+            android:name=".DetectRingModeChange"
+            android:foregroundServiceType="shortService"
+            android:enabled="true"
+            android:exported="false">
+        </service>
     </application>
 </manifest>

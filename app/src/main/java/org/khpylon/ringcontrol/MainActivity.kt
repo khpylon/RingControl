@@ -15,7 +15,6 @@ import android.icu.text.MessageFormat
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
 import android.widget.Toast
@@ -71,8 +70,6 @@ import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import org.khpylon.ringcontrol.ui.theme.RingControlTheme
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
-import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -92,16 +89,14 @@ class MainActivity : ComponentActivity() {
         val context = applicationContext
 
         // Older versions require permission to write log files
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            if (ContextCompat.checkSelfPermission(
-                    this, Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE) ) {
-                    registerForActivityResult(ActivityResultContracts.RequestPermission()) { }.launch(
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    )
-                }
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE) ) {
+                registerForActivityResult(ActivityResultContracts.RequestPermission()) { }.launch(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
             }
         }
 
@@ -110,16 +105,10 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(context, crashMessage, Toast.LENGTH_SHORT).show()
         }
 
-        // This only works in the foreground for Android 8 and above
-//        context.registerReceiver(object : BroadcastReceiver() {
-//            // Register a receiver to detect external changes to the ringer
-//            override fun onReceive(context: Context, intent: Intent) {
-//                if (intent.action == AudioManager.RINGER_MODE_CHANGED_ACTION) {
-//                    Widget.updateWidget(context)
-//                }
-//            }
-//        }, IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION))
-
+        // Start service to detect external changes to the ring mode
+        Intent(this, DetectRingModeChange::class.java).also {
+            startForegroundService(it)
+        }
 
         // Android 13 and later require user to allow posting of notifications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -164,6 +153,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 private fun checkLogcat(context: Context): String? {
     try {
         // Dump the crash buffer and exit
@@ -174,11 +164,13 @@ private fun checkLogcat(context: Context): String? {
         val log = java.lang.StringBuilder()
         var line: String?
         while (bufferedReader.readLine().also { line = it } != null) {
-            log.append("${line}\n")
+            if ( line!!.contains("AndroidRuntime:") ) {
+                log.append("${line}\n")
+            }
         }
 
         // If we find something, write to logcat.txt file
-        if (log.length > 0) {
+        if (log.isNotEmpty()) {
             val inStream: InputStream = ByteArrayInputStream(
                 log.toString().toByteArray(
                     StandardCharsets.UTF_8
@@ -211,34 +203,14 @@ private fun writeExternalFile(
         baseFilename + time.format(DateTimeFormatter.ofPattern("MM-dd-HH:mm:ss", Locale.US))
     try {
         val outStream: OutputStream?
-        val fileCollection: Uri
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            fileCollection =
-                MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val contentValues = ContentValues()
-            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, outputFilename)
-            contentValues.put(MediaStore.Downloads.MIME_TYPE, mimeType)
-            val resolver = context.contentResolver
-            val uri = resolver.insert(fileCollection, contentValues)
-                ?: throw IOException("Couldn't create MediaStore Entry")
-            outStream = resolver.openOutputStream(uri)
-        } else {
-            val extension: String
-            extension = ".txt"
-//                when (mimeType) {
-//                    Constants.APPLICATION_JSON -> ".json"
-//                    Constants.APPLICATION_ZIP -> ".zip"
-//                    Constants.TEXT_HTML -> ".html"
-//                    else -> ".txt"
-//                }
-            val outputFile = File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                outputFilename + extension
-            )
-            outputFile.delete()
-            outputFile.createNewFile()
-            outStream = FileOutputStream(outputFile)
-        }
+        val fileCollection: Uri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val contentValues = ContentValues()
+        contentValues.put(MediaStore.Downloads.DISPLAY_NAME, outputFilename)
+        contentValues.put(MediaStore.Downloads.MIME_TYPE, mimeType)
+        val resolver = context.contentResolver
+        val uri = resolver.insert(fileCollection, contentValues)
+            ?: throw IOException("Couldn't create MediaStore Entry")
+        outStream = resolver.openOutputStream(uri)
         outStream?.let {
 //            copyStreams(inStream, outStream)
             var len: Int
@@ -248,7 +220,7 @@ private fun writeExternalFile(
             }
             outStream.close()
         }
-    } catch (e: IOException) {
+    } catch (_: IOException) {
     }
     return outputFilename
 }

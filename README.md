@@ -14,10 +14,8 @@ If you would like to use the app in your preferred language but there is no tran
 
 ## Bug Reports
 
-At this time I haven't added any functionality in the app to generate crash reports.  But when I do, the process will got something like this:
-1. a file named *ringcontrol_logcat-<datetime>.txt* will be written to the *Downloads* filter of your phone
-2. you will upload that file to ["Issues"](https://github.com/khpylon/RIngControl/issues) on GitHub
-3. I'll try to figure out why the app crashed and how to fix it
+The app has the ability to detect an app crash and generate reports.  This happens whenever the app is run. It will write a file named *ringcontrol_logcat-<datetime>.txt* to the *Downloads* folder of your phone, and
+display a brief message.  Google will also upload analytics when a crash occurs, but they often do not contain as much detail as the crash report. Since the app does not communicate with the Internet, you will need to manually upload the crash report file to ["Issues"](https://github.com/khpylon/RIngControl/issues) on GitHub.  I'll then try to figure out why the app crashed and how to fix it.
 
 ## Credits
 
