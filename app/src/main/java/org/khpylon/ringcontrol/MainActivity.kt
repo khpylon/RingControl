@@ -88,6 +88,7 @@ class MainActivity : ComponentActivity() {
 
         val context = applicationContext
 
+
         // Older versions require permission to write log files
         if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -106,9 +107,10 @@ class MainActivity : ComponentActivity() {
         }
 
         // Start service to detect external changes to the ring mode
-        Intent(this, DetectRingModeChange::class.java).also {
-            startForegroundService(it)
-        }
+//        Intent(this, DetectRingModeChange::class.java).also {
+//            startForegroundService(it)
+//        }
+        AudioChangeReceiver.nextAlarm(context)
 
         // Android 13 and later require user to allow posting of notifications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

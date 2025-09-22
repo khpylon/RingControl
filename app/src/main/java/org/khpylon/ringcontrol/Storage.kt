@@ -2,16 +2,19 @@ package org.khpylon.ringcontrol
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.media.AudioManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 
 private object StorageConstants {
     const val TAG = "storage"
+    const val RING_MODE = "ringMode"
     const val BG_COLOR = "bgColor"
     const val FG_COLOR = "fgColor"
     const val TEXT_VISIBLE = "textVisible"
     const val TEXT_DESCRIPTION = "textDescription"
 }
+
 class Storage(private val context: Context) {
     private fun commitWait(edit: SharedPreferences.Editor) {
         for (i in 0..9) {
@@ -20,6 +23,17 @@ class Storage(private val context: Context) {
             }
         }
     }
+
+    var ringMode: Int
+        get() {
+            val pref = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE)
+            return pref.getInt(StorageConstants.RING_MODE, AudioManager.RINGER_MODE_NORMAL)
+        }
+        set(mode) {
+            val edit = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE).edit()
+            edit.putInt(StorageConstants.RING_MODE, mode)
+            commitWait(edit)
+        }
 
     var backgroundColor: Int
         get() {

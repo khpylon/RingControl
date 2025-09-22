@@ -11,6 +11,7 @@ class BootComplete : BroadcastReceiver() {
             action.equals(Intent.ACTION_MY_PACKAGE_REPLACED, ignoreCase = true) )
         {
             Widget.updateWidget(context)
+            AudioChangeReceiver.nextAlarm(context)
         }
     }
 }

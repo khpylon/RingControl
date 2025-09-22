@@ -54,14 +54,15 @@ open class Widget : AppWidgetProvider() {
                 {
                     val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
                     val currentMode = audioManager.getRingerMode()
-
-                    audioManager.setRingerMode(
+                    val nextMode =
                         when (currentMode) {
                             AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_VIBRATE
                             AudioManager.RINGER_MODE_VIBRATE -> AudioManager.RINGER_MODE_SILENT
                             else -> AudioManager.RINGER_MODE_NORMAL
                         }
-                    )
+
+                    audioManager.ringerMode = nextMode
+                    Storage(context).ringMode = nextMode
                     onUpdate(context, manager, ids)
                 }
             }
