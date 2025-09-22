@@ -13,6 +13,7 @@ private object StorageConstants {
     const val FG_COLOR = "fgColor"
     const val TEXT_VISIBLE = "textVisible"
     const val TEXT_DESCRIPTION = "textDescription"
+    const val NEW_INSTALL = "newInstall"
 }
 
 class Storage(private val context: Context) {
@@ -76,6 +77,17 @@ class Storage(private val context: Context) {
         set(descriptive) {
             val edit = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE).edit()
             edit.putBoolean(StorageConstants.TEXT_DESCRIPTION, descriptive)
+            commitWait(edit)
+        }
+
+    var newInstall: Boolean
+        get() {
+            val pref = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE)
+            return pref.getBoolean(StorageConstants.NEW_INSTALL, true)
+        }
+        set(isNewInstall) {
+            val edit = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE).edit()
+            edit.putBoolean(StorageConstants.NEW_INSTALL, isNewInstall)
             commitWait(edit)
         }
 
