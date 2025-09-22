@@ -12,13 +12,23 @@ android {
         applicationId = "org.khpylon.ringcontrol"
         minSdk = 30
         targetSdk = 36
-        versionCode = 7
-        versionName = "2025.09.20-12-beta"
+        versionCode = 8
+        versionName = "2025.09.22-10-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug{
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            isDebuggable = false
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = ".debug"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -28,6 +38,13 @@ android {
             isDebuggable = false
         }
     }
+
+    sourceSets {
+        sourceSets.getByName("debug") {
+            res.srcDirs("debug/res")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
