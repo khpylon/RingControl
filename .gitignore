@@ -16,3 +16,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+TODO.txt
+/build/reports/problems/problems-report.html
+/Widget.kt
