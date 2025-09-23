@@ -92,21 +92,13 @@ open class Widget : AppWidgetProvider() {
 
         // Draw the background of the widget
         var drawable = AppCompatResources.getDrawable(context, R.drawable.background) as Drawable
-        views.setImageViewBitmap(R.id.background, drawBitmap(drawable, storage.backgroundColor))
-
-        // Set color of text
-        views.setTextColor(R.id.description, Color.White.toArgb())
-
-        // Display text if visible
-        views.setViewVisibility(
-            R.id.description,
-            if (storage.textVisible) View.VISIBLE else View.GONE
-        )
+        views.setImageViewBitmap(R.id.background, drawBitmap(drawable, storage.backgroundColor, storage.widgetScale))
 
         // Get the description for the widget's text
         val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
         val currentMode = audioManager.getRingerMode()
-        val description = if (storage.textDescription) {
+        val description = if (!storage.textVisible) "" else
+            if (storage.textDescription) {
             when (currentMode) {
                 AudioManager.RINGER_MODE_NORMAL -> context.getString(R.string.normal_description)
                 AudioManager.RINGER_MODE_VIBRATE -> context.getString(R.string.vibrate_description)
@@ -115,7 +107,8 @@ open class Widget : AppWidgetProvider() {
         } else {
             context.getString(R.string.ringer_description)
         }
-        views.setTextViewText(R.id.description, description)
+
+        views.setImageViewBitmap(R.id.text, drawTextBitmap(description,  storage.widgetScale))
 
         // Draw the foreground of the widget
         val symbol = when (currentMode) {
@@ -124,7 +117,7 @@ open class Widget : AppWidgetProvider() {
             else -> R.drawable.outline_volume_off_48
         }
         drawable = AppCompatResources.getDrawable(context, symbol) as Drawable
-        views.setImageViewBitmap(R.id.logo, drawBitmap(drawable, storage.foregroundColor))
+        views.setImageViewBitmap(R.id.logo, drawBitmap(drawable, storage.foregroundColor, storage.widgetScale))
 
         // Post the updates
         appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -152,17 +145,20 @@ open class Widget : AppWidgetProvider() {
 
         // Set the color on a widget component
         @JvmStatic
-        fun drawBitmap(drawable: Drawable, color: Int): Bitmap {
+        fun drawBitmap(drawable: Drawable, color: Int, scale: Float): Bitmap {
+
+            val intrinsicWidth = drawable.intrinsicWidth
+            val intrinsicHeight = intrinsicWidth
 
             // Create a bitmap and canvas the same size as the drawable
-            val bmp = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
+            val bmp = createBitmap(intrinsicWidth, (intrinsicHeight *1.5f).toInt())
             val canvas = Canvas(bmp)
 
             // Create secondary bitmap and canvas
-            val bmp2 = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
+            val bmp2 = createBitmap(intrinsicWidth, (intrinsicHeight *1.5f).toInt())
             val canvas2 = Canvas(bmp2)
 
-            // Fill with primary bitmap with the desired color
+            // Fill with primary bitmap with the desired color.  This fills the entire canvas
             val paint = Paint()
             paint.color = color
             paint.alpha = 0xff
@@ -170,12 +166,35 @@ open class Widget : AppWidgetProvider() {
             canvas.drawPaint(paint)
 
             // Draw the image on the secondary canvas
-            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.setBounds(0, 0, canvas.width, canvas.width)
+            canvas2.scale(scale, scale, canvas.width /2f, canvas.width /2f)
+
             drawable.draw(canvas2)
 
             // Merge the image and the color
             paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
             canvas.drawBitmap(bmp2, 0f, 0f, paint)
+
+            return bmp
+        }
+
+        @JvmStatic
+        fun drawTextBitmap(message: String, scale: Float): Bitmap {
+            val intrinsicHeight = 160
+            val intrinsicWidth = intrinsicHeight
+            // Create a bitmap and canvas the same size as the drawable
+            val bmp = createBitmap(intrinsicWidth, (intrinsicHeight * 1.5f).toInt())
+            val canvas = Canvas(bmp)
+
+            val textPaint = Paint()
+            textPaint.setColor(Color.White.toArgb())
+            textPaint.textSize = 40f // Set text size in pixels
+            textPaint.isAntiAlias = true // Smooth the text edges
+            textPaint.textAlign = Paint.Align.CENTER
+
+            canvas.scale(scale, scale, canvas.width / 2f, canvas.width / 2f)
+
+            canvas.drawText(  message,canvas.width / 2f,canvas.height * 0.9f,textPaint)
 
             return bmp
         }

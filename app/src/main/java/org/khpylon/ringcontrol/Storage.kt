@@ -13,6 +13,7 @@ private object StorageConstants {
     const val FG_COLOR = "fgColor"
     const val TEXT_VISIBLE = "textVisible"
     const val TEXT_DESCRIPTION = "textDescription"
+    const val WIDGET_SCALE = "widgetScale"
     const val NEW_INSTALL = "newInstall"
 }
 
@@ -79,6 +80,18 @@ class Storage(private val context: Context) {
             edit.putBoolean(StorageConstants.TEXT_DESCRIPTION, descriptive)
             commitWait(edit)
         }
+
+    var widgetScale: Float
+        get() {
+            val pref = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE)
+            return pref.getFloat(StorageConstants.WIDGET_SCALE, 1f)
+        }
+        set(scale) {
+            val edit = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE).edit()
+            edit.putFloat(StorageConstants.WIDGET_SCALE, scale)
+            commitWait(edit)
+        }
+
 
     var newInstall: Boolean
         get() {

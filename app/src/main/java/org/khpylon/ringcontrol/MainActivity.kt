@@ -43,12 +43,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -94,7 +96,7 @@ class MainActivity : ComponentActivity() {
                 this, Manifest.permission.WRITE_EXTERNAL_STORAGE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE) ) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 registerForActivityResult(ActivityResultContracts.RequestPermission()) { }.launch(
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
                 )
@@ -118,7 +120,7 @@ class MainActivity : ComponentActivity() {
                     this, Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) ) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
                     registerForActivityResult(ActivityResultContracts.RequestPermission()) { }.launch(
                         Manifest.permission.POST_NOTIFICATIONS
                     )
@@ -166,7 +168,7 @@ private fun checkLogcat(context: Context): String? {
         val log = java.lang.StringBuilder()
         var line: String?
         while (bufferedReader.readLine().also { line = it } != null) {
-            if ( line!!.contains("AndroidRuntime:") ) {
+            if (line!!.contains("AndroidRuntime:")) {
                 log.append("${line}\n")
             }
         }
@@ -187,7 +189,10 @@ private fun checkLogcat(context: Context): String? {
 
             // Clear the crash log.
             Runtime.getRuntime().exec("logcat -c")
-            return MessageFormat.format(context.getString(R.string.logcat_crashfile_formatstring), outputFilename)
+            return MessageFormat.format(
+                context.getString(R.string.logcat_crashfile_formatstring),
+                outputFilename
+            )
         }
     } catch (_: IOException) {
     }
@@ -205,7 +210,8 @@ private fun writeExternalFile(
         baseFilename + time.format(DateTimeFormatter.ofPattern("MM-dd-HH:mm:ss", Locale.US))
     try {
         val outStream: OutputStream?
-        val fileCollection: Uri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val fileCollection: Uri =
+            MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         val contentValues = ContentValues()
         contentValues.put(MediaStore.Downloads.DISPLAY_NAME, outputFilename)
         contentValues.put(MediaStore.Downloads.MIME_TYPE, mimeType)
@@ -226,7 +232,6 @@ private fun writeExternalFile(
     }
     return outputFilename
 }
-
 
 @Composable
 fun MainApplication(modifier: Modifier = Modifier) {
@@ -362,6 +367,8 @@ fun MainApplication(modifier: Modifier = Modifier) {
             var bgColor by remember { mutableIntStateOf(storage.backgroundColor) }
             var fgColor by remember { mutableIntStateOf(storage.foregroundColor and 0xffffff) }
             var initialColor by remember { mutableIntStateOf(bgColor) }
+            var widgetScale by remember { mutableFloatStateOf(storage.widgetScale) }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -374,7 +381,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
                     key(recomposeColorPicker) {
                         HsvColorPicker(
                             modifier = Modifier
-                                .size(240.dp)
+                                .size(180.dp)
                                 .align(alignment = Alignment.CenterHorizontally)
                                 .padding(10.dp),
                             initialColor = Color(initialColor),
@@ -392,7 +399,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
 
                         BrightnessSlider(
                             modifier = Modifier
-                                .width(240.dp)
+                                .width(180.dp)
                                 .align(alignment = Alignment.CenterHorizontally)
                                 .padding(10.dp)
                                 .height(30.dp),
@@ -408,8 +415,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
                         R.drawable.background
                     ) as Drawable
 
-                    val bgBitmap = Widget.drawBitmap(bgDrawable, bgColor)
-
+                    val bgBitmap = Widget.drawBitmap(bgDrawable, bgColor, widgetScale)
                     Image(
                         bitmap = bgBitmap.asImageBitmap(),
                         modifier = Modifier
@@ -423,9 +429,20 @@ fun MainApplication(modifier: Modifier = Modifier) {
                         R.drawable.outline_volume_off_48
                     ) as Drawable
 
-                    val bitmap = Widget.drawBitmap(drawable, fgColor).asImageBitmap()
+                    val bitmap =
+                        Widget.drawBitmap(drawable, fgColor, widgetScale * .8f).asImageBitmap()
                     Image(
                         bitmap = bitmap,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(240.dp)
+                            .padding(10.dp),
+                        contentDescription = "",
+                    )
+
+                    val textBitmap = Widget.drawTextBitmap("Label", widgetScale).asImageBitmap()
+                    Image(
+                        bitmap = textBitmap,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(240.dp)
@@ -484,6 +501,32 @@ fun MainApplication(modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.Center
+            )
+            {
+                Text(
+                    text = "Widget size",
+                    modifier = Modifier
+                        .padding(10.dp)
+                )
+                Spacer(Modifier.weight(1f))  // separate text and toggle switch
+
+                Slider(
+                    value = widgetScale,
+                    valueRange = 0.75f..1.0f,
+                    steps = 10,
+                    onValueChange = {
+                        if (enabled) {
+                            widgetScale = it
+                        }
+                    }
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.Center
             ) {
 
                 val buttonColors = ButtonDefaults.buttonColors(
@@ -498,10 +541,11 @@ fun MainApplication(modifier: Modifier = Modifier) {
                             // Store the current color information
                             storage.foregroundColor = fgColor
                             storage.backgroundColor = bgColor
+                            storage.widgetScale = widgetScale
                             Widget.updateWidget(context)
                             Toast.makeText(
                                 context,
-                                context.getString(R.string.color_changes_saved), Toast.LENGTH_SHORT
+                                context.getString(R.string.changes_saved), Toast.LENGTH_SHORT
                             ).show()
                         }
                     },
@@ -517,6 +561,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
                         // Reload the initial values
                         fgColor = storage.foregroundColor
                         bgColor = storage.backgroundColor
+                        widgetScale = storage.widgetScale
                         initialColor = if (selectedIndex == 0) bgColor else fgColor
                         recomposeColorPicker = !recomposeColorPicker
                     },
@@ -529,6 +574,13 @@ fun MainApplication(modifier: Modifier = Modifier) {
                 }
             }
 
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            )
+            {}
             Spacer(Modifier.weight(1f))
             Text(
                 text = "App version " + BuildConfig.VERSION_NAME,
