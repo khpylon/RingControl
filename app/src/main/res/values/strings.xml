@@ -19,4 +19,6 @@
     <string name="ring_control_channel">Ring Control channel</string>
     <string name="ring_control_notification_title">Ring Control</string>
     <string name="ring_control_notification_text">This service detects external changes to the ring settings.</string>
+    <string name="whats_new">"What's new in "</string>
+    <string name="dismiss_button">Dismiss</string>
 </resources>
