@@ -2,7 +2,6 @@ package org.khpylon.ringcontrol
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity.NOTIFICATION_SERVICE
 import android.app.NotificationManager
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -10,7 +9,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.AssetManager
 import android.graphics.drawable.Drawable
 import android.icu.text.MessageFormat
 import android.net.Uri
@@ -45,7 +43,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -74,7 +71,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -267,7 +263,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
 
     val storage = Storage(context)
 
-    val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    val notificationManager = context.getSystemService(android.app.Activity.NOTIFICATION_SERVICE) as NotificationManager
     var permissions by remember { mutableStateOf(notificationManager.isNotificationPolicyAccessGranted) }
     var isTextVisible by remember { mutableStateOf(storage.textVisible) }
     var isTextDescriptive by remember { mutableStateOf(storage.textDescription) }
@@ -385,7 +381,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
             )
             {
                 Text(
-                    text = "Visible description",
+                    text = stringResource(R.string.visible_description),
                     modifier = Modifier
                         .padding(10.dp)
                 )
@@ -408,32 +404,34 @@ fun MainApplication(modifier: Modifier = Modifier) {
                 }
             }
 
-            // Toggle description of text on widget
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-            )
-            {
-                Text(
-                    text = "Enable mode description",
+            if (isTextVisible) {
+                // Toggle description of text on widget
+                Row(
                     modifier = Modifier
-                        .padding(10.dp)
+                        .fillMaxWidth()
                 )
-                Spacer(Modifier.weight(1f))  // separate text and toggle switch
-                if (enabled) {
-                    Switch(
-                        checked = isTextDescriptive,
-                        onCheckedChange = {
-                            isTextDescriptive = it
-                            storage.textDescription = isTextDescriptive
-                            Widget.updateWidget(context)
-                        }
+                {
+                    Text(
+                        text = stringResource(R.string.enable_mode_description),
+                        modifier = Modifier
+                            .padding(10.dp)
                     )
-                } else {
-                    Switch(
-                        checked = isTextDescriptive,
-                        onCheckedChange = null
-                    )
+                    Spacer(Modifier.weight(1f))  // separate text and toggle switch
+                    if (enabled) {
+                        Switch(
+                            checked = isTextDescriptive,
+                            onCheckedChange = {
+                                isTextDescriptive = it
+                                storage.textDescription = isTextDescriptive
+                                Widget.updateWidget(context)
+                            }
+                        )
+                    } else {
+                        Switch(
+                            checked = isTextDescriptive,
+                            onCheckedChange = null
+                        )
+                    }
                 }
             }
 
@@ -515,7 +513,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
                         contentDescription = "",
                     )
 
-                    val textBitmap = Widget.drawTextBitmap("Label", widgetScale).asImageBitmap()
+                    val textBitmap = Widget.drawTextBitmap(stringResource(R.string.sample_mode_label), widgetScale).asImageBitmap()
                     Image(
                         bitmap = textBitmap,
                         modifier = Modifier
@@ -535,7 +533,6 @@ fun MainApplication(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.Center
             )
             {
-
                 // Set up everything for the radio buttons
                 val foregroundString = stringResource(R.string.background_string)
                 val backgroundString = stringResource(R.string.foreground_string)
@@ -579,7 +576,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
             )
             {
                 Text(
-                    text = "Widget size",
+                    text = stringResource(R.string.widget_size),
                     modifier = Modifier
                         .padding(10.dp)
                 )
@@ -613,7 +610,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
                 Button(
                     onClick = {
                         if (enabled) {
-                            // Store the current color information
+                            // Store the new widget information
                             storage.foregroundColor = fgColor
                             storage.backgroundColor = bgColor
                             storage.widgetScale = widgetScale
@@ -627,13 +624,13 @@ fun MainApplication(modifier: Modifier = Modifier) {
                     colors = buttonColors,
                     shape = RoundedCornerShape(10.dp),
                 ) {
-                    Text(text = "Save")
+                    Text(text = stringResource(R.string.save_button))
                 }
 
                 // "Reset" button
                 Button(
                     onClick = {
-                        // Reload the initial values
+                        // Reload the prior values
                         fgColor = storage.foregroundColor
                         bgColor = storage.backgroundColor
                         widgetScale = storage.widgetScale
@@ -645,7 +642,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
                 ) {
-                    Text(text = "Reset")
+                    Text(text = stringResource(R.string.reset_button))
                 }
             }
 
@@ -658,7 +655,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
             {}
             Spacer(Modifier.weight(1f))
             Text(
-                text = "App version " + BuildConfig.VERSION_NAME,
+                text = stringResource(R.string.app_version) + BuildConfig.VERSION_NAME,
                 modifier = Modifier
                     .padding(start = 2.dp)
                     .align(Alignment.CenterHorizontally)

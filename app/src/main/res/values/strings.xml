@@ -6,8 +6,8 @@
     <string name="dnd_permissions">Enable \"Modes access\" permission</string>
     <string name="widget_needs_dnd_permissions">This widget requires \"Modes access\" to be enabled.</string>
     <string name="ringer">Ringer</string>
-    <string name="background_string">Background</string>
-    <string name="foreground_string">Foreground</string>
+    <string name="background_string">Background color</string>
+    <string name="foreground_string">Foreground color</string>
     <string name="normal_description">Normal</string>
     <string name="vibrate_description">Vibrate</string>
     <string name="silent_description">Silent</string>
@@ -21,4 +21,11 @@
     <string name="ring_control_notification_text">This service detects external changes to the ring settings.</string>
     <string name="whats_new">"What's new in "</string>
     <string name="dismiss_button">Dismiss</string>
+    <string name="visible_description">Visible description</string>
+    <string name="enable_mode_description">Enable mode description</string>
+    <string name="widget_size">Widget size</string>
+    <string name="save_button">Save</string>
+    <string name="reset_button">Reset</string>
+    <string name="app_version">"App version "</string>
+    <string name="sample_mode_label">Label</string>
 </resources>
