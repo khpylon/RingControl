@@ -1,3 +1,3 @@
 1) The size of the widget can be adjusted.
 2) The widget updates if changes are made to the ringer externally.  Right now it's not possible for the app to detect this immediately, so there may be up to a twenty second delay.
-3) Silent mode is done by muting the ring and notification channels instead of using Do Not Disturb mode.
+3) Turning off sound and vibration is apparently only possible by using Do Not Disturb mode.  The order of

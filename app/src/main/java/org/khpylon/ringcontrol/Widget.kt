@@ -55,8 +55,8 @@ open class Widget : AppWidgetProvider() {
                     val currentMode = getRingerMode(audioManager)
                     val nextMode =
                         when (currentMode) {
-                            AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_VIBRATE
-                            AudioManager.RINGER_MODE_VIBRATE -> AudioManager.RINGER_MODE_SILENT
+                            AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_SILENT
+                            AudioManager.RINGER_MODE_SILENT ->  AudioManager.RINGER_MODE_VIBRATE
                             else -> AudioManager.RINGER_MODE_NORMAL
                         }
 
@@ -98,6 +98,9 @@ open class Widget : AppWidgetProvider() {
 
         // Get the description for the widget's text
         val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
+        audioManager.setVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION,
+            AudioManager.VIBRATE_SETTING_OFF
+        )
         val currentMode = getRingerMode(audioManager)
         val description = if (!storage.textVisible) "" else
             if (storage.textDescription) {
@@ -145,69 +148,71 @@ open class Widget : AppWidgetProvider() {
         @JvmStatic
         fun getRingerMode(manager: AudioManager): Int {
             val ringer = manager.ringerMode
-            val mute = manager.getStreamVolume(AudioManager.STREAM_RING)
-
-            return if (ringer == AudioManager.RINGER_MODE_NORMAL) {
-                if (mute > 0) {
-                    AudioManager.RINGER_MODE_NORMAL
-                } else {
-                    AudioManager.RINGER_MODE_SILENT
-                }
-            } else if (ringer == AudioManager.RINGER_MODE_VIBRATE) {
-                AudioManager.RINGER_MODE_VIBRATE
-            } else { // AudioManager.RINGER_MODE_SILENT) {
-                AudioManager.RINGER_MODE_SILENT
-            }
+            return ringer
+//            val mute = manager.getStreamVolume(AudioManager.STREAM_RING)
+//
+//            return if (ringer == AudioManager.RINGER_MODE_NORMAL) {
+//                if (mute > 0) {
+//                    AudioManager.RINGER_MODE_NORMAL
+//                } else {
+//                    AudioManager.RINGER_MODE_SILENT
+//                }
+//            } else if (ringer == AudioManager.RINGER_MODE_VIBRATE) {
+//                AudioManager.RINGER_MODE_VIBRATE
+//            } else { // AudioManager.RINGER_MODE_SILENT) {
+//                AudioManager.RINGER_MODE_SILENT
+//            }
         }
 
         @JvmStatic
         fun setRingerMode(manager: AudioManager, mode: Int): Int {
-            val pseudoMode: Int
-
-            when (mode) {
-                AudioManager.RINGER_MODE_NORMAL -> {
-                    pseudoMode = mode
-                    manager.adjustStreamVolume(
-                        AudioManager.STREAM_RING,
-                        AudioManager.ADJUST_UNMUTE,
-                        0
-                    )
-                    manager.adjustStreamVolume(
-                        AudioManager.STREAM_NOTIFICATION,
-                        AudioManager.ADJUST_UNMUTE,
-                        0
-                    )
-                    manager.adjustStreamVolume(
-                        AudioManager.STREAM_SYSTEM,
-                        AudioManager.ADJUST_UNMUTE,
-                        0
-                    )
-                }
-
-                AudioManager.RINGER_MODE_VIBRATE -> {
-                    pseudoMode = mode
-                }
-
-                else -> { // AudioManager.RINGER_MODE_SILENT) {
-                    pseudoMode = AudioManager.RINGER_MODE_NORMAL
-                    manager.adjustStreamVolume(
-                        AudioManager.STREAM_RING,
-                        AudioManager.ADJUST_MUTE,
-                        0
-                    )
-                    manager.adjustStreamVolume(
-                        AudioManager.STREAM_NOTIFICATION,
-                        AudioManager.ADJUST_MUTE,
-                        0
-                    )
-                    manager.adjustStreamVolume(
-                        AudioManager.STREAM_SYSTEM,
-                        AudioManager.ADJUST_MUTE,
-                        0
-                    )
-                }
-            }
-            return pseudoMode
+            return mode
+//            val pseudoMode: Int
+//
+//            when (mode) {
+//                AudioManager.RINGER_MODE_NORMAL -> {
+//                    pseudoMode = mode
+//                    manager.adjustStreamVolume(
+//                        AudioManager.STREAM_RING,
+//                        AudioManager.ADJUST_UNMUTE,
+//                        0
+//                    )
+//                    manager.adjustStreamVolume(
+//                        AudioManager.STREAM_NOTIFICATION,
+//                        AudioManager.ADJUST_UNMUTE,
+//                        0
+//                    )
+//                    manager.adjustStreamVolume(
+//                        AudioManager.STREAM_SYSTEM,
+//                        AudioManager.ADJUST_UNMUTE,
+//                        0
+//                    )
+//                }
+//
+//                AudioManager.RINGER_MODE_VIBRATE -> {
+//                    pseudoMode = mode
+//                }
+//
+//                else -> { // AudioManager.RINGER_MODE_SILENT) {
+//                    pseudoMode = AudioManager.RINGER_MODE_NORMAL
+//                    manager.adjustStreamVolume(
+//                        AudioManager.STREAM_RING,
+//                        AudioManager.ADJUST_MUTE,
+//                        0
+//                    )
+//                    manager.adjustStreamVolume(
+//                        AudioManager.STREAM_NOTIFICATION,
+//                        AudioManager.ADJUST_MUTE,
+//                        0
+//                    )
+//                    manager.adjustStreamVolume(
+//                        AudioManager.STREAM_SYSTEM,
+//                        AudioManager.ADJUST_MUTE,
+//                        0
+//                    )
+//                }
+//            }
+//            return pseudoMode
         }
 
         @JvmStatic
