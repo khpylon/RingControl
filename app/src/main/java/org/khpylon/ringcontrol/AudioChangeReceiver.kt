@@ -3,7 +3,7 @@ package org.khpylon.ringcontrol
 import android.app.AlarmManager
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service.NOTIFICATION_SERVICE
+//import android.app.Service.NOTIFICATION_SERVICE
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Context.AUDIO_SERVICE
@@ -15,25 +15,29 @@ import java.time.ZoneId
 
 class AudioChangeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
+        val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
         val action = intent?.action
         when ( action ) {
             NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED -> {
-                val notManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                val currentMode = notManager.currentInterruptionFilter
-                when (currentMode) {
-                    NotificationManager.INTERRUPTION_FILTER_ALL, // DND off
-                    NotificationManager.INTERRUPTION_FILTER_PRIORITY // DND on
-                        -> Widget.updateWidget(context)
-
-                    NotificationManager.INTERRUPTION_FILTER_ALARMS,
-                    NotificationManager.INTERRUPTION_FILTER_NONE,
-                    NotificationManager.INTERRUPTION_FILTER_UNKNOWN -> null
+                if (Storage(context).ringMode != audioManager.ringerMode) {
+                    Storage(context).ringMode = audioManager.ringerMode
+                    Log.d(Constants.LOGTAG, "widget update needed")
+                    Widget.updateWidget(context)
                 }
+//                val notManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+//                val currentMode = notManager.currentInterruptionFilter
+//                when (currentMode) {
+//                    NotificationManager.INTERRUPTION_FILTER_ALL, // DND off
+//                    NotificationManager.INTERRUPTION_FILTER_PRIORITY // DND on
+//                        -> Widget.updateWidget(context)
+//
+//                    NotificationManager.INTERRUPTION_FILTER_ALARMS,
+//                    NotificationManager.INTERRUPTION_FILTER_NONE,
+//                    NotificationManager.INTERRUPTION_FILTER_UNKNOWN -> null
+//                }
             }
             else -> {
                 Log.d(Constants.LOGTAG, "alarm")
-                val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
-
                 if (Storage(context).ringMode != audioManager.ringerMode) {
                     Storage(context).ringMode = audioManager.ringerMode
                     Log.d(Constants.LOGTAG, "widget update needed")
