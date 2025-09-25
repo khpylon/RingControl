@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Context.AUDIO_SERVICE
 import android.content.Intent
 import android.media.AudioManager
+import android.text.format.DateUtils
 import android.util.Log
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -64,9 +65,10 @@ class AudioChangeReceiver : BroadcastReceiver() {
             )
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             alarmManager[AlarmManager.RTC_WAKEUP, nextTime] = pendingIntent
-            alarmManager.setExact(
+            alarmManager.setWindow(
                 AlarmManager.RTC_WAKEUP,
                 nextTime,
+                DateUtils.SECOND_IN_MILLIS * 5,
                 pendingIntent
             )
         }
