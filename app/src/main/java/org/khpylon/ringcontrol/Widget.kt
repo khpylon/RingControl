@@ -16,7 +16,6 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.drawable.Drawable
 import android.media.AudioManager
-import android.view.View
 import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
@@ -48,12 +47,12 @@ open class Widget : AppWidgetProvider() {
                         context.getString(R.string.widget_needs_dnd_permissions),
                         Toast.LENGTH_SHORT
                     ).show()
-                } else 
-                
+                } else
+
                 // Otherwise cycle to the next mode and update all widgets
                 {
                     val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
-                    val currentMode = audioManager.getRingerMode()
+                    val currentMode = getRingerMode(audioManager)
                     val nextMode =
                         when (currentMode) {
                             AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_VIBRATE
@@ -61,8 +60,8 @@ open class Widget : AppWidgetProvider() {
                             else -> AudioManager.RINGER_MODE_NORMAL
                         }
 
-                    audioManager.ringerMode = nextMode
-                    Storage(context).ringMode = nextMode
+                    audioManager.ringerMode = setRingerMode(audioManager, nextMode)
+                    Storage(context).ringMode = setRingerMode(audioManager, nextMode)
                     onUpdate(context, manager, ids)
                 }
             }
@@ -92,23 +91,26 @@ open class Widget : AppWidgetProvider() {
 
         // Draw the background of the widget
         var drawable = AppCompatResources.getDrawable(context, R.drawable.background) as Drawable
-        views.setImageViewBitmap(R.id.background, drawBitmap(drawable, storage.backgroundColor, storage.widgetScale))
+        views.setImageViewBitmap(
+            R.id.background,
+            drawBitmap(drawable, storage.backgroundColor, storage.widgetScale)
+        )
 
         // Get the description for the widget's text
         val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
-        val currentMode = audioManager.getRingerMode()
+        val currentMode = getRingerMode(audioManager)
         val description = if (!storage.textVisible) "" else
             if (storage.textDescription) {
-            when (currentMode) {
-                AudioManager.RINGER_MODE_NORMAL -> context.getString(R.string.normal_description)
-                AudioManager.RINGER_MODE_VIBRATE -> context.getString(R.string.vibrate_description)
-                else -> context.getString(R.string.silent_description)
+                when (currentMode) {
+                    AudioManager.RINGER_MODE_NORMAL -> context.getString(R.string.normal_description)
+                    AudioManager.RINGER_MODE_VIBRATE -> context.getString(R.string.vibrate_description)
+                    else -> context.getString(R.string.silent_description)
+                }
+            } else {
+                context.getString(R.string.ringer_description)
             }
-        } else {
-            context.getString(R.string.ringer_description)
-        }
 
-        views.setImageViewBitmap(R.id.text, drawTextBitmap(description,  storage.widgetScale))
+        views.setImageViewBitmap(R.id.text, drawTextBitmap(description, storage.widgetScale))
 
         // Draw the foreground of the widget
         val symbol = when (currentMode) {
@@ -117,7 +119,10 @@ open class Widget : AppWidgetProvider() {
             else -> R.drawable.outline_volume_off_48
         }
         drawable = AppCompatResources.getDrawable(context, symbol) as Drawable
-        views.setImageViewBitmap(R.id.logo, drawBitmap(drawable, storage.foregroundColor, storage.widgetScale))
+        views.setImageViewBitmap(
+            R.id.logo,
+            drawBitmap(drawable, storage.foregroundColor, storage.widgetScale)
+        )
 
         // Post the updates
         appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -136,6 +141,75 @@ open class Widget : AppWidgetProvider() {
     }
 
     companion object {
+
+        @JvmStatic
+        fun getRingerMode(manager: AudioManager): Int {
+            val ringer = manager.ringerMode
+            val mute = manager.getStreamVolume(AudioManager.STREAM_RING)
+
+            return if (ringer == AudioManager.RINGER_MODE_NORMAL) {
+                if (mute > 0) {
+                    AudioManager.RINGER_MODE_NORMAL
+                } else {
+                    AudioManager.RINGER_MODE_SILENT
+                }
+            } else if (ringer == AudioManager.RINGER_MODE_VIBRATE) {
+                AudioManager.RINGER_MODE_VIBRATE
+            } else { // AudioManager.RINGER_MODE_SILENT) {
+                AudioManager.RINGER_MODE_SILENT
+            }
+        }
+
+        @JvmStatic
+        fun setRingerMode(manager: AudioManager, mode: Int): Int {
+            val pseudoMode: Int
+
+            when (mode) {
+                AudioManager.RINGER_MODE_NORMAL -> {
+                    pseudoMode = mode
+                    manager.adjustStreamVolume(
+                        AudioManager.STREAM_RING,
+                        AudioManager.ADJUST_UNMUTE,
+                        0
+                    )
+                    manager.adjustStreamVolume(
+                        AudioManager.STREAM_NOTIFICATION,
+                        AudioManager.ADJUST_UNMUTE,
+                        0
+                    )
+                    manager.adjustStreamVolume(
+                        AudioManager.STREAM_SYSTEM,
+                        AudioManager.ADJUST_UNMUTE,
+                        0
+                    )
+                }
+
+                AudioManager.RINGER_MODE_VIBRATE -> {
+                    pseudoMode = mode
+                }
+
+                else -> { // AudioManager.RINGER_MODE_SILENT) {
+                    pseudoMode = AudioManager.RINGER_MODE_NORMAL
+                    manager.adjustStreamVolume(
+                        AudioManager.STREAM_RING,
+                        AudioManager.ADJUST_MUTE,
+                        0
+                    )
+                    manager.adjustStreamVolume(
+                        AudioManager.STREAM_NOTIFICATION,
+                        AudioManager.ADJUST_MUTE,
+                        0
+                    )
+                    manager.adjustStreamVolume(
+                        AudioManager.STREAM_SYSTEM,
+                        AudioManager.ADJUST_MUTE,
+                        0
+                    )
+                }
+            }
+            return pseudoMode
+        }
+
         @JvmStatic
         fun updateWidget(context: Context) {
             val updateIntent = Intent()
@@ -151,11 +225,11 @@ open class Widget : AppWidgetProvider() {
             val intrinsicHeight = intrinsicWidth
 
             // Create a bitmap and canvas the same size as the drawable
-            val bmp = createBitmap(intrinsicWidth, (intrinsicHeight *1.5f).toInt())
+            val bmp = createBitmap(intrinsicWidth, (intrinsicHeight * 1.5f).toInt())
             val canvas = Canvas(bmp)
 
             // Create secondary bitmap and canvas
-            val bmp2 = createBitmap(intrinsicWidth, (intrinsicHeight *1.5f).toInt())
+            val bmp2 = createBitmap(intrinsicWidth, (intrinsicHeight * 1.5f).toInt())
             val canvas2 = Canvas(bmp2)
 
             // Fill with primary bitmap with the desired color.  This fills the entire canvas
@@ -167,7 +241,7 @@ open class Widget : AppWidgetProvider() {
 
             // Draw the image on the secondary canvas
             drawable.setBounds(0, 0, canvas.width, canvas.width)
-            canvas2.scale(scale, scale, canvas.width /2f, canvas.width /2f)
+            canvas2.scale(scale, scale, canvas.width / 2f, canvas.width / 2f)
 
             drawable.draw(canvas2)
 
@@ -194,7 +268,7 @@ open class Widget : AppWidgetProvider() {
 
             canvas.scale(scale, scale, canvas.width / 2f, canvas.width / 2f)
 
-            canvas.drawText(  message,canvas.width / 2f,canvas.height * 0.9f,textPaint)
+            canvas.drawText(message, canvas.width / 2f, canvas.height * 0.9f, textPaint)
 
             return bmp
         }
