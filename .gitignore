@@ -19,3 +19,4 @@ local.properties
 TODO.txt
 /build/reports/problems/problems-report.html
 /Widget.kt
+/.idea/deploymentTargetSelector.xml
