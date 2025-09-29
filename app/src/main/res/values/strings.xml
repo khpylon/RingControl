@@ -28,4 +28,7 @@
     <string name="reset_button">Reset</string>
     <string name="app_version">"App version "</string>
     <string name="sample_mode_label">Label</string>
+    <string name="battery_opt">Battery optimization:</string>
+    <string name="battery_opts_off_description">Unrestricted (recommended)</string>
+    <string name="battery_opts_on_description">Optimized (may cause issues)</string>
 </resources>

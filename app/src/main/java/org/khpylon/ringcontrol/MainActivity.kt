@@ -14,6 +14,7 @@ import android.icu.text.MessageFormat
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.MediaStore
 import android.provider.Settings
 import android.widget.Toast
@@ -70,7 +71,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -90,6 +94,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+private var leaving = false
 class MainActivity : ComponentActivity() {
     @SuppressLint("NewApi")
     @OptIn(ExperimentalMaterial3Api::class)
@@ -160,7 +165,9 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         // Since number of widgets could change while paused, this is an easy way to make sure 
         // composable doesn't get the wrong info
-        finish()
+        if( !leaving ) {
+            finish()
+        }
     }
 }
 
@@ -273,7 +280,21 @@ fun MainApplication(modifier: Modifier = Modifier) {
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
             permissions = notificationManager.isNotificationPolicyAccessGranted
+            leaving = false
         }
+
+    val packageName = context.packageName
+    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    var batteryOptimized by remember { mutableStateOf(pm.isIgnoringBatteryOptimizations(packageName)) }
+
+    val launcher2 =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
+        {
+            val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            batteryOptimized = pm.isIgnoringBatteryOptimizations(packageName)
+            leaving = false
+        }
+
 
     // If the app has been updated, display a dialog explaining changes
     if (showDialog) {
@@ -349,8 +370,40 @@ fun MainApplication(modifier: Modifier = Modifier) {
             Switch(
                 checked = permissions,
                 onCheckedChange = {
+                    leaving = true
                     val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
                     launcher.launch(intent)
+                }
+            )
+        }
+
+        // Toggle control for DND permissions
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+        )
+        {
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(context.getString(R.string.battery_opt))
+                    }
+                    append("\n")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                        append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description),)
+                    }
+                },
+                modifier = Modifier
+                    .padding(10.dp)
+                    .align(Alignment.CenterVertically)
+            )
+            Spacer(Modifier.weight(1f))  // separate text and toggle switch
+            Switch(
+                checked = batteryOptimized,
+                onCheckedChange = {
+                    leaving = true
+                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                    launcher2.launch(intent)
                 }
             )
         }
@@ -663,7 +716,6 @@ fun MainApplication(modifier: Modifier = Modifier) {
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
