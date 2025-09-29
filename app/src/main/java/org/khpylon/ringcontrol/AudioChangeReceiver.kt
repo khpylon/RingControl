@@ -38,8 +38,10 @@ class AudioChangeReceiver : BroadcastReceiver() {
 //                }
             }
             else -> {
-                Log.d(Constants.LOGTAG, "alarm")
-                if (Storage(context).ringMode != audioManager.ringerMode) {
+                val stored = Storage(context).ringMode
+                val mode = audioManager.ringerMode
+                Log.d(Constants.LOGTAG, "alarm stored=$stored mode=$mode")
+                if (stored != mode) {
                     Storage(context).ringMode = audioManager.ringerMode
                     Log.d(Constants.LOGTAG, "widget update needed")
                     Widget.updateWidget(context)
