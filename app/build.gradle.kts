@@ -13,7 +13,7 @@ android {
         minSdk = 30
         targetSdk = 36
         versionCode = 10
-        versionName = "2025.09.25-14-beta"
+        versionName = "2025.09.29-16-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -36,6 +36,7 @@ android {
                 "proguard-rules.pro"
             )
             isDebuggable = false
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
@@ -71,6 +72,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.compose.colorpicker)
     implementation(libs.compose.colorpicker)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.runtime.livedata)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

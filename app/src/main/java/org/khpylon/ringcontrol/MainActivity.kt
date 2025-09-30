@@ -2,6 +2,7 @@ package org.khpylon.ringcontrol
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ComponentCaller
 import android.app.NotificationManager
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -58,6 +59,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +80,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
@@ -94,14 +100,53 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private var leaving = false
+// This viewmodel is used to store the state of whether or not any widgets are on the desktop
+class WidgetViewModel : ViewModel() {
+
+    // true means there are widgets present
+    private val _status = MutableLiveData(false)
+    val status: LiveData<Boolean> = _status
+
+    // set the status directly
+    fun setStatus(value: Boolean) {
+        _status.value = value
+    }
+
+    // disable status when last widget deleted
+    fun widgetsDisabled() {
+        _status.value = false
+    }
+
+    // enable status when first widget added
+    fun widgetsEnabled() {
+        _status.value = true
+    }
+}
+
 class MainActivity : ComponentActivity() {
+    var model = WidgetViewModel()
+
+    override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
+        super.onNewIntent(intent, caller)
+        val action = intent.action
+        if (action.equals(Constants.WIDGETS_ENABLED, ignoreCase = true)) {
+            model.widgetsEnabled()
+        } else if (action.equals(Constants.WIDGETS_DISABLED, ignoreCase = true)) {
+            model.widgetsDisabled()
+        }
+    }
+
     @SuppressLint("NewApi")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val context = applicationContext
+
+        // Check whether there are any widgets on the screen
+        val manager = AppWidgetManager.getInstance(context)
+        val myWidgetProvider = ComponentName(context, Widget::class.java)
+        model.setStatus(manager.getAppWidgetIds(myWidgetProvider).size > 0)
 
         // Older versions require permission to write log files
         if (ContextCompat.checkSelfPermission(
@@ -152,25 +197,15 @@ class MainActivity : ComponentActivity() {
                 )
                 { innerPadding ->
                     MainApplication(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        model = model
                     )
                 }
-
                 Widget.updateWidget(applicationContext)
             }
         }
     }
-
-    override fun onPause() {
-        super.onPause()
-        // Since number of widgets could change while paused, this is an easy way to make sure 
-        // composable doesn't get the wrong info
-        if( !leaving ) {
-            finish()
-        }
-    }
 }
-
 
 private fun checkLogcat(context: Context): String? {
     try {
@@ -265,12 +300,15 @@ private fun readChangeFile(context: Context): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainApplication(modifier: Modifier = Modifier) {
+fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
     val context = LocalContext.current
+    val viewModel = viewModel { model }
+    val widgetStatus by viewModel.status.observeAsState()
 
     val storage = Storage(context)
 
-    val notificationManager = context.getSystemService(android.app.Activity.NOTIFICATION_SERVICE) as NotificationManager
+    val notificationManager =
+        context.getSystemService(android.app.Activity.NOTIFICATION_SERVICE) as NotificationManager
     var permissions by remember { mutableStateOf(notificationManager.isNotificationPolicyAccessGranted) }
     var isTextVisible by remember { mutableStateOf(storage.textVisible) }
     var isTextDescriptive by remember { mutableStateOf(storage.textDescription) }
@@ -280,7 +318,6 @@ fun MainApplication(modifier: Modifier = Modifier) {
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
             permissions = notificationManager.isNotificationPolicyAccessGranted
-            leaving = false
         }
 
     val packageName = context.packageName
@@ -292,9 +329,7 @@ fun MainApplication(modifier: Modifier = Modifier) {
         {
             val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
             batteryOptimized = pm.isIgnoringBatteryOptimizations(packageName)
-            leaving = false
         }
-
 
     // If the app has been updated, display a dialog explaining changes
     if (showDialog) {
@@ -370,7 +405,6 @@ fun MainApplication(modifier: Modifier = Modifier) {
             Switch(
                 checked = permissions,
                 onCheckedChange = {
-                    leaving = true
                     val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
                     launcher.launch(intent)
                 }
@@ -384,15 +418,16 @@ fun MainApplication(modifier: Modifier = Modifier) {
         )
         {
             Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append(context.getString(R.string.battery_opt))
-                    }
-                    append("\n")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                        append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description),)
-                    }
-                },
+                text =
+                    buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(context.getString(R.string.battery_opt))
+                        }
+                        append("\n")
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                            append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description))
+                        }
+                    },
                 modifier = Modifier
                     .padding(10.dp)
                     .align(Alignment.CenterVertically)
@@ -401,17 +436,13 @@ fun MainApplication(modifier: Modifier = Modifier) {
             Switch(
                 checked = batteryOptimized,
                 onCheckedChange = {
-                    leaving = true
                     val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
                     launcher2.launch(intent)
                 }
             )
         }
 
-        // Check whether there are any widgets on the screen
-        val manager = AppWidgetManager.getInstance(context)
-        val myWidgetProvider = ComponentName(context, Widget::class.java)
-        val enabled = manager.getAppWidgetIds(myWidgetProvider).size > 0
+        val enabled = widgetStatus as Boolean
 
         if (!enabled) {
             Row(modifier = Modifier.fillMaxWidth())
@@ -566,7 +597,10 @@ fun MainApplication(modifier: Modifier = Modifier) {
                         contentDescription = "",
                     )
 
-                    val textBitmap = Widget.drawTextBitmap(stringResource(R.string.sample_mode_label), widgetScale).asImageBitmap()
+                    val textBitmap = Widget.drawTextBitmap(
+                        stringResource(R.string.sample_mode_label),
+                        widgetScale
+                    ).asImageBitmap()
                     Image(
                         bitmap = textBitmap,
                         modifier = Modifier
@@ -717,10 +751,11 @@ fun MainApplication(modifier: Modifier = Modifier) {
     }
 }
 
+@SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     RingControlTheme {
-        MainApplication()
+        MainApplication(model = WidgetViewModel())
     }
 }

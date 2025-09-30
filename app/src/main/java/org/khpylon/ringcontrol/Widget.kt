@@ -24,6 +24,25 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.createBitmap
 
 open class Widget : AppWidgetProvider() {
+
+    // This is called when the first widget is put on the screen
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        val intent = Intent(context, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.action = Constants.WIDGETS_ENABLED
+        context.startActivity(intent)
+    }
+
+    // This is called when the last widget is removed from the screen
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+        val intent = Intent(context, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.action = Constants.WIDGETS_DISABLED
+        context.startActivity(intent)
+    }
+
     private val CHANGE_RINGER_MODE = "TOUCH"
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -98,9 +117,6 @@ open class Widget : AppWidgetProvider() {
 
         // Get the description for the widget's text
         val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
-        audioManager.setVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION,
-            AudioManager.VIBRATE_SETTING_OFF
-        )
         val currentMode = getRingerMode(audioManager)
         val description = if (!storage.textVisible) "" else
             if (storage.textDescription) {
