@@ -18,6 +18,7 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -130,8 +131,10 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent, caller)
         val action = intent.action
         if (action.equals(Constants.WIDGETS_ENABLED, ignoreCase = true)) {
+            Log.d(Constants.LOGTAG, "onNewIntent with WIDGETS_ENABLED")
             model.widgetsEnabled()
         } else if (action.equals(Constants.WIDGETS_DISABLED, ignoreCase = true)) {
+            Log.d(Constants.LOGTAG, "onNewIntent with WIDGETS_DISABLED")
             model.widgetsDisabled()
         }
     }
@@ -471,6 +474,7 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 )
                 Spacer(Modifier.weight(1f))  // separate text and toggle switch
                 if (enabled) {
+                    Log.d(Constants.LOGTAG,"recompose, status enabled")
                     Switch(
                         checked = isTextVisible,
                         onCheckedChange = {
@@ -480,11 +484,11 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                         }
                     )
                 } else {
+                    Log.d(Constants.LOGTAG,"recompose, status disabled")
                     Switch(
                         checked = isTextVisible,
                         onCheckedChange = null
                     )
-
                 }
             }
 
