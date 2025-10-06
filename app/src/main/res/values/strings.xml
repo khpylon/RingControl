@@ -1,9 +1,11 @@
 <resources>
     <string name="app_name">Ring Control</string>
     <string name="app_widget_description">Ring Control</string>
-    <string name="app_explanation">This is a basic application which allows the ring
-        mode to be changed using a widget, or by events in your calendars.</string>
-    <string name="dnd_permissions">Enable \"Modes access\" permission</string>
+    <string name="app_explanation">This application allows your phone\'s ring
+        mode to be changed using a widget, and optionally by specific events in your calendars.</string>
+    <string name="dnd_permissions">\"Modes access\" permission:</string>
+    <string name="dnd_enabled">Enabled</string>
+    <string name="dnd_disabled">Disabled</string>
     <string name="widget_needs_dnd_permissions">This widget requires \"Modes access\" to be enabled.</string>
     <string name="ringer">Ringer</string>
     <string name="background_string">Background color</string>
@@ -29,15 +31,19 @@
     <string name="app_version">"App version "</string>
     <string name="sample_mode_label">Label</string>
     <string name="battery_opt">Battery optimization:</string>
-    <string name="battery_opts_off_description">  Unrestricted (recommended)</string>
-    <string name="battery_opts_on_description">  Optimized (may cause issues)</string>
+    <string name="battery_opts_off_description">Unrestricted (recommended)</string>
+    <string name="battery_opts_on_description">Optimized (may cause issues)</string>
     <string name="use_calendar_events">Use calendar events</string>
-    <string name="dnd_tooltip">Modes (or Do Not Disturb) access is necessary to change the ringer\'s status.</string>
+    <string name="dnd_tooltip">Modes (or Do Not Disturb) access is required to change the ringer\'s status.
+        \n\nThe widget will not function if this permission is disabled.</string>
     <string name="battery_tooltip">Unrestricted battery optimization is recommended so the
         widget will update when battery saving mode is enabled.</string>
     <string name="calendar_tooltip">Silence the ringer for specific events in your calendar. Just add the text
-        #RingControl# or #RC# in the event\'s title or description.\n\n
-        Calendar needs to be enabled in the app permissions.</string>
+        #RingControl# or #RC# in the event\'s title or description.
+        \n\nCalendar must be enabled in the app\'s permissions.</string>
     <string name="visible_desc_tooltip">Enable to display text below the widget.</string>
     <string name="mode_desc_tooltip">Enable to display the ring state in the text below the widget.</string>
+    <string name="permission_settings">Switch to permission settings.</string>
+    <string name="widget_controls">Switch to widget appearance controls.</string>
+    <string name="tooltip_help">Press and hold a description for more information.</string>
 </resources>
