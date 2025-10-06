@@ -334,6 +334,30 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
             batteryOptimized = pm.isIgnoringBatteryOptimizations(packageName)
         }
 
+    var calPermission by remember {
+        mutableStateOf(
+            storage.isCalendarEnabled
+
+//            context.checkSelfPermission(
+//                Manifest.permission.READ_CALENDAR
+//            )
+        )
+    }
+    val calLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())
+        {
+            storage.isCalendarEnabled = context.checkSelfPermission(
+                Manifest.permission.READ_CALENDAR
+            ) == PackageManager.PERMISSION_GRANTED
+            calPermission = storage.isCalendarEnabled
+        }
+
+    if (calPermission) {
+        CalendarAlarmReceiver.startAlarm(context)
+    } else {
+        CalendarAlarmReceiver.cancelAlarm(context)
+    }
+
     // If the app has been updated, display a dialog explaining changes
     if (showDialog) {
         BasicAlertDialog(
@@ -444,6 +468,36 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 }
             )
         }
+        // Enable/sisable calendar integration
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+        )
+        {
+            Text(
+                text = "Calendar",
+                modifier = Modifier
+                    .padding(10.dp)
+            )
+            Spacer(Modifier.weight(1f))  // separate text and toggle switch
+            Switch(
+                checked = calPermission,
+                onCheckedChange = { value ->
+                    if (value) {
+                        if( context.checkSelfPermission( Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED ) {
+                            storage.isCalendarEnabled = true
+                            calPermission = true
+                        } else {
+                            calLauncher.launch(Manifest.permission.READ_CALENDAR)
+                        }
+                    } else {
+                        storage.isCalendarEnabled = false
+                        calPermission = false
+                    }
+                }
+            )
+        }
+
 
         val enabled = widgetStatus as Boolean
 

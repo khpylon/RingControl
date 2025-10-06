@@ -6,7 +6,7 @@ import android.media.AudioManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 
-private object StorageConstants {
+object StorageConstants {
     const val TAG = "storage"
     const val RING_MODE = "ringMode"
     const val BG_COLOR = "bgColor"
@@ -15,6 +15,13 @@ private object StorageConstants {
     const val TEXT_DESCRIPTION = "textDescription"
     const val WIDGET_SCALE = "widgetScale"
     const val NEW_INSTALL = "newInstall"
+    const val EVENT_ID: String = "event_id"
+    const val APP_STATE: String = "app_state"
+    const val RING_STATUS: String = "ring_status"
+    const val CALENDAR_STATUS: String = "calendar_status"
+    const val INACTIVE: Int = 0
+    const val ACTIVE: Int = 1
+
 }
 
 class Storage(private val context: Context) {
@@ -101,6 +108,86 @@ class Storage(private val context: Context) {
         set(isNewInstall) {
             val edit = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE).edit()
             edit.putBoolean(StorageConstants.NEW_INSTALL, isNewInstall)
+            commitWait(edit)
+        }
+
+    var eventId: Long
+        get() {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            return pref.getLong(StorageConstants.EVENT_ID, 0)
+        }
+        set(id) {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            val edit = pref.edit()
+            // Store data. you may also use putFloat(), putInt(), putLong() as requirement
+            edit.putLong(StorageConstants.EVENT_ID, id)
+            // Commit the changes
+            commitWait(edit)
+        }
+
+    var appState: Int
+        get() {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            return pref.getInt(StorageConstants.APP_STATE, 0)
+        }
+        set(id) {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            val edit = pref.edit()
+            // Store data. you may also use putFloat(), putInt(), putLong() as requirement
+            edit.putInt(StorageConstants.APP_STATE, id)
+            // Commit the changes
+            commitWait(edit)
+        }
+
+    var ringStatus: Int
+        get() {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            return pref.getInt(StorageConstants.RING_STATUS, 0)
+        }
+        set(id) {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            val edit = pref.edit()
+            // Store data. you may also use putFloat(), putInt(), putLong() as requirement
+            edit.putInt(StorageConstants.RING_STATUS, id)
+            // Commit the changes
+            commitWait(edit)
+        }
+
+    var isCalendarEnabled: Boolean
+        get() {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            return pref.getBoolean(StorageConstants.CALENDAR_STATUS, false)
+        }
+        set(value) {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            val edit = pref.edit()
+            // Store data. you may also use putFloat(), putInt(), putLong() as requirement
+            edit.putBoolean(StorageConstants.CALENDAR_STATUS, value)
+            // Commit the changes
             commitWait(edit)
         }
 

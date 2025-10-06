@@ -14,6 +14,9 @@ class BootComplete : BroadcastReceiver() {
             {
                 Storage(context).newInstall = true
             }
+            if (Storage(context).isCalendarEnabled) {
+                CalendarAlarmReceiver.startAlarm(context)
+            }
             Widget.updateWidget(context)
             AudioChangeReceiver.nextAlarm(context)
         }
