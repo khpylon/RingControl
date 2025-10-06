@@ -1,3 +1,4 @@
 1) Add setting to change battery optimization.
 2) New logo for the app.
-3) Minor bug fixes.
+3) Allow calender events to silence ringer; just add "#RingControl#" to the title or description of an event.
+4) Minor bug fixes.

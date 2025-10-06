@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">Ring Control</string>
     <string name="app_widget_description">Ring Control</string>
-    <string name="app_explanation">This is a basic application which allows the user to change ring
-        modes using a widget.  There isn\'t much more to say.</string>
+    <string name="app_explanation">This is a basic application which allows the ring
+        mode to be changed using a widget, or by events in your calendars.</string>
     <string name="dnd_permissions">Enable \"Modes access\" permission</string>
     <string name="widget_needs_dnd_permissions">This widget requires \"Modes access\" to be enabled.</string>
     <string name="ringer">Ringer</string>
@@ -29,6 +29,15 @@
     <string name="app_version">"App version "</string>
     <string name="sample_mode_label">Label</string>
     <string name="battery_opt">Battery optimization:</string>
-    <string name="battery_opts_off_description">Unrestricted (recommended)</string>
-    <string name="battery_opts_on_description">Optimized (may cause issues)</string>
+    <string name="battery_opts_off_description">  Unrestricted (recommended)</string>
+    <string name="battery_opts_on_description">  Optimized (may cause issues)</string>
+    <string name="use_calendar_events">Use calendar events</string>
+    <string name="dnd_tooltip">Modes (or Do Not Disturb) access is necessary to change the ringer\'s status.</string>
+    <string name="battery_tooltip">Unrestricted battery optimization is recommended so the
+        widget will update when battery saving mode is enabled.</string>
+    <string name="calendar_tooltip">Silence the ringer for specific events in your calendar. Just add the text
+        #RingControl# or #RC# in the event\'s title or description.\n\n
+        Calendar needs to be enabled in the app permissions.</string>
+    <string name="visible_desc_tooltip">Enable to display text below the widget.</string>
+    <string name="mode_desc_tooltip">Enable to display the ring state in the text below the widget.</string>
 </resources>

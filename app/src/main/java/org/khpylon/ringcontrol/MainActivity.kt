@@ -49,6 +49,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -56,7 +57,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -307,6 +311,7 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
     val context = LocalContext.current
     val viewModel = viewModel { model }
     val widgetStatus by viewModel.status.observeAsState()
+    val enabled = widgetStatus as Boolean
 
     val storage = Storage(context)
 
@@ -335,14 +340,9 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
         }
 
     var calPermission by remember {
-        mutableStateOf(
-            storage.isCalendarEnabled
-
-//            context.checkSelfPermission(
-//                Manifest.permission.READ_CALENDAR
-//            )
-        )
+        mutableStateOf(storage.isCalendarEnabled)
     }
+
     val calLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())
         {
@@ -352,10 +352,15 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
             calPermission = storage.isCalendarEnabled
         }
 
-    if (calPermission) {
-        CalendarAlarmReceiver.startAlarm(context)
-    } else {
-        CalendarAlarmReceiver.cancelAlarm(context)
+    // If we have permissions to use calendar, handle the alarm for it
+    if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR)
+        == PackageManager.PERMISSION_GRANTED
+    ) {
+        if (calPermission) {
+            CalendarAlarmReceiver.startAlarm(context)
+        } else {
+            CalendarAlarmReceiver.cancelAlarm(context)
+        }
     }
 
     // If the app has been updated, display a dialog explaining changes
@@ -423,11 +428,21 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 .fillMaxWidth()
         )
         {
-            Text(
-                text = stringResource(R.string.dnd_permissions),
-                modifier = Modifier
-                    .padding(10.dp)
-            )
+            TooltipBox(
+                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                tooltip =
+                    { PlainTooltip {
+                        Text(stringResource(R.string.dnd_tooltip))
+                    }
+                    },
+                state = rememberTooltipState()
+            ) {
+                Text(
+                    text = stringResource(R.string.dnd_permissions),
+                    modifier = Modifier
+                        .padding(10.dp)
+                )
+            }
             Spacer(Modifier.weight(1f))  // separate text and toggle switch
             Switch(
                 checked = permissions,
@@ -438,27 +453,37 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
             )
         }
 
-        // Toggle control for DND permissions
+        // Toggle control for battery optimization
         Row(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
         )
         {
-            Text(
-                text =
-                    buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append(context.getString(R.string.battery_opt))
-                        }
-                        append("\n")
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                            append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description))
+            TooltipBox(
+                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                tooltip =
+                    { PlainTooltip {
+                        Text(stringResource(R.string.battery_tooltip))
                         }
                     },
-                modifier = Modifier
-                    .padding(10.dp)
-                    .align(Alignment.CenterVertically)
-            )
+                state = rememberTooltipState()
+            ) {
+                Text(
+                    text =
+                        buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append(context.getString(R.string.battery_opt))
+                            }
+                            append("\n")
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                                append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description))
+                            }
+                        },
+                    modifier = Modifier
+                        .padding(10.dp)
+                )
+            }
             Spacer(Modifier.weight(1f))  // separate text and toggle switch
             Switch(
                 checked = batteryOptimized,
@@ -468,23 +493,35 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 }
             )
         }
-        // Enable/sisable calendar integration
+
+        // Enable/disable calendar usage
         Row(
             modifier = Modifier
                 .fillMaxWidth()
         )
         {
-            Text(
-                text = "Calendar",
-                modifier = Modifier
-                    .padding(10.dp)
-            )
+            TooltipBox(
+                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                tooltip =
+                    { PlainTooltip {
+                            Text(stringResource(R.string.calendar_tooltip))
+                        }
+                  },
+                state = rememberTooltipState()
+            ) {
+                Text(
+                    text = stringResource(R.string.use_calendar_events),
+                    modifier = Modifier
+                        .padding(10.dp)
+                )
+            }
+
             Spacer(Modifier.weight(1f))  // separate text and toggle switch
             Switch(
                 checked = calPermission,
                 onCheckedChange = { value ->
                     if (value) {
-                        if( context.checkSelfPermission( Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED ) {
+                        if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
                             storage.isCalendarEnabled = true
                             calPermission = true
                         } else {
@@ -497,9 +534,6 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 }
             )
         }
-
-
-        val enabled = widgetStatus as Boolean
 
         if (!enabled) {
             Row(modifier = Modifier.fillMaxWidth())
@@ -521,14 +555,24 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                     .fillMaxWidth()
             )
             {
-                Text(
-                    text = stringResource(R.string.visible_description),
-                    modifier = Modifier
-                        .padding(10.dp)
-                )
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip =
+                        { PlainTooltip {
+                            Text(stringResource(R.string.visible_desc_tooltip))
+                        }
+                        },
+                    state = rememberTooltipState()
+                ) {
+                    Text(
+                        text = stringResource(R.string.visible_description),
+                        modifier = Modifier
+                            .padding(10.dp)
+                    )
+                }
                 Spacer(Modifier.weight(1f))  // separate text and toggle switch
                 if (enabled) {
-                    Log.d(Constants.LOGTAG,"recompose, status enabled")
+                    Log.d(Constants.LOGTAG, "recompose, status enabled")
                     Switch(
                         checked = isTextVisible,
                         onCheckedChange = {
@@ -538,7 +582,7 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                         }
                     )
                 } else {
-                    Log.d(Constants.LOGTAG,"recompose, status disabled")
+                    Log.d(Constants.LOGTAG, "recompose, status disabled")
                     Switch(
                         checked = isTextVisible,
                         onCheckedChange = null
@@ -553,11 +597,21 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                         .fillMaxWidth()
                 )
                 {
-                    Text(
-                        text = stringResource(R.string.enable_mode_description),
-                        modifier = Modifier
-                            .padding(10.dp)
-                    )
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                        tooltip =
+                            { PlainTooltip {
+                                Text(stringResource(R.string.mode_desc_tooltip))
+                            }
+                            },
+                        state = rememberTooltipState()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.enable_mode_description),
+                            modifier = Modifier
+                                .padding(10.dp)
+                        )
+                    }
                     Spacer(Modifier.weight(1f))  // separate text and toggle switch
                     if (enabled) {
                         Switch(
