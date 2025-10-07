@@ -12,8 +12,8 @@ android {
         applicationId = "org.khpylon.ringcontrol"
         minSdk = 30
         targetSdk = 36
-        versionCode = 10
-        versionName = "2025.09.29-16-beta"
+        versionCode = 11
+        versionName = "2025.10.06-10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
