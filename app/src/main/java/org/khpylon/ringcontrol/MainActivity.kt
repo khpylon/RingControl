@@ -78,6 +78,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -307,6 +308,46 @@ private fun readChangeFile(context: Context): String {
     return message.toString()
 }
 
+// Composable to display control switches and their descriptions
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OptionSwitchRow(
+    tooltip: String,
+    desc: AnnotatedString,
+    isChecked: Boolean,
+    onClick: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    )
+    {
+        TooltipBox(
+            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+            tooltip =
+                {
+                    PlainTooltip {
+                        Text(tooltip)
+                    }
+                },
+            state = rememberTooltipState()
+        ) {
+            Text(
+                text = desc,
+                modifier = Modifier
+                    .padding(10.dp)
+            )
+        }
+        Spacer(Modifier.weight(1f))  // separate text and toggle switch
+        Switch(
+            checked = isChecked,
+            onCheckedChange = onClick
+        )
+    }
+
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
@@ -467,132 +508,67 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
             }
 
             // Toggle control for DND permissions
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            )
-            {
-                TooltipBox(
-                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                    tooltip =
-                        {
-                            PlainTooltip {
-                                Text(stringResource(R.string.dnd_tooltip))
-                            }
-                        },
-                    state = rememberTooltipState()
-                ) {
-                    Text(
-                        text =
-                            buildAnnotatedString {
-                                withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                                    append(context.getString(R.string.dnd_permissions))
-                                }
-                                append("\n  ")
-                                withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                                    append(context.getString(if (modesAccessPermission) R.string.dnd_enabled else R.string.dnd_disabled))
-                                }
-                            },
-
-                        modifier = Modifier
-                            .padding(10.dp)
-                    )
-                }
-                Spacer(Modifier.weight(1f))  // separate text and toggle switch
-                Switch(
-                    checked = modesAccessPermission,
-                    onCheckedChange = {
-                        val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-                        launcher.launch(intent)
+            OptionSwitchRow(
+                tooltip = stringResource(R.string.dnd_tooltip),
+                desc = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                        append(context.getString(R.string.dnd_permissions))
                     }
-                )
-            }
+                    append("\n  ")
+                    withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
+                        append(context.getString(if (modesAccessPermission) R.string.dnd_enabled else R.string.dnd_disabled))
+                    }
+                },
+                isChecked = modesAccessPermission,
+                onClick = {
+                    val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+                    launcher.launch(intent)
+                }
+            )
+
 
             // Toggle control for battery optimization
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            )
-            {
-                TooltipBox(
-                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                    tooltip =
-                        {
-                            PlainTooltip {
-                                Text(stringResource(R.string.battery_tooltip))
-                            }
-                        },
-                    state = rememberTooltipState()
-                ) {
-                    Text(
-                        text =
-                            buildAnnotatedString {
-                                withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                                    append(context.getString(R.string.battery_opt))
-                                }
-                                append("\n  ")
-                                withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                                    append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description))
-                                }
-                            },
-                        modifier = Modifier
-                            .padding(10.dp)
-                    )
-                }
-                Spacer(Modifier.weight(1f))  // separate text and toggle switch
-                Switch(
-                    checked = batteryOptimized,
-                    onCheckedChange = {
-                        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+            OptionSwitchRow(
+                tooltip = stringResource(R.string.battery_tooltip),
+                desc = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                            append(context.getString(R.string.battery_opt))
+                        }
+                        append("\n  ")
+                        withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
+                            append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description))
+                        }
+                    },
+                isChecked = batteryOptimized,
+                onClick = {
+                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
                         launcher2.launch(intent)
-                    }
-                )
-            }
+                }
+            )
 
             // Enable/disable calendar usage
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            )
-            {
-                TooltipBox(
-                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                    tooltip =
-                        {
-                            PlainTooltip {
-                                Text(stringResource(R.string.calendar_tooltip))
-                            }
-                        },
-                    state = rememberTooltipState()
-                ) {
-                    Text(
-                        text = stringResource(R.string.use_calendar_events),
-                        modifier = Modifier
-                            .padding(10.dp)
-                    )
-                }
-
-                Spacer(Modifier.weight(1f))  // separate text and toggle switch
-                Switch(
-                    checked = calPermission,
-                    onCheckedChange = { value ->
-                        if (value) {
-                            if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
-                                storage.isCalendarEnabled = true
-                                calPermission = true
-                            } else {
-                                calLauncher.launch(Manifest.permission.READ_CALENDAR)
-                            }
-                        } else {
-                            storage.isCalendarEnabled = false
-                            calPermission = false
-                        }
+            OptionSwitchRow(
+                tooltip = stringResource(R.string.calendar_tooltip),
+                desc = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                        append(context.getString(R.string.use_calendar_events))
                     }
-                )
-            }
+                },
+                isChecked = calPermission,
+                onClick = { value ->
+                    if (value) {
+                        if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
+                            storage.isCalendarEnabled = true
+                            calPermission = true
+                        } else {
+                            calLauncher.launch(Manifest.permission.READ_CALENDAR)
+                        }
+                    } else {
+                        storage.isCalendarEnabled = false
+                        calPermission = false
+                    }
+                }
+            )
         }
 
         // Display widget appearance UI
@@ -613,87 +589,41 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                     .alpha(if (enabled) 1.0f else 0.5f)
             ) {
                 // Toggle visibility of text on widget
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
+                OptionSwitchRow(
+                    tooltip = stringResource(R.string.visible_desc_tooltip),
+                    desc = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                            append(context.getString(R.string.visible_description))
+                        }
+                    },
+                    isChecked = isTextVisible,
+                    onClick = {
+                        if (enabled) {
+                            isTextVisible = it
+                            storage.textVisible = isTextVisible
+                            Widget.updateWidget(context)
+                        }
+                    }
                 )
-                {
-                    TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                        tooltip =
-                            {
-                                PlainTooltip {
-                                    Text(stringResource(R.string.visible_desc_tooltip))
-                                }
-                            },
-                        state = rememberTooltipState()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.visible_description),
-                            modifier = Modifier
-                                .padding(10.dp)
-                        )
-                    }
-                    Spacer(Modifier.weight(1f))  // separate text and toggle switch
-                    if (enabled) {
-                        Log.d(Constants.LOGTAG, "recompose, status enabled")
-                        Switch(
-                            checked = isTextVisible,
-                            onCheckedChange = {
-                                isTextVisible = it
-                                storage.textVisible = isTextVisible
-                                Widget.updateWidget(context)
-                            }
-                        )
-                    } else {
-                        Log.d(Constants.LOGTAG, "recompose, status disabled")
-                        Switch(
-                            checked = isTextVisible,
-                            onCheckedChange = null
-                        )
-                    }
-                }
 
                 if (isTextVisible) {
                     // Toggle description of text on widget
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
+                    OptionSwitchRow(
+                        tooltip = stringResource(R.string.mode_desc_tooltip),
+                        desc = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                                append(context.getString(R.string.enable_mode_description))
+                            }
+                        },
+                        isChecked = isTextDescriptive,
+                        onClick = {
+                            if (enabled) {
+                                isTextDescriptive = it
+                                storage.textDescription = isTextDescriptive
+                                Widget.updateWidget(context)
+                            }
+                        }
                     )
-                    {
-                        TooltipBox(
-                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                            tooltip =
-                                {
-                                    PlainTooltip {
-                                        Text(stringResource(R.string.mode_desc_tooltip))
-                                    }
-                                },
-                            state = rememberTooltipState()
-                        ) {
-                            Text(
-                                text = stringResource(R.string.enable_mode_description),
-                                modifier = Modifier
-                                    .padding(10.dp)
-                            )
-                        }
-                        Spacer(Modifier.weight(1f))  // separate text and toggle switch
-                        if (enabled) {
-                            Switch(
-                                checked = isTextDescriptive,
-                                onCheckedChange = {
-                                    isTextDescriptive = it
-                                    storage.textDescription = isTextDescriptive
-                                    Widget.updateWidget(context)
-                                }
-                            )
-                        } else {
-                            Switch(
-                                checked = isTextDescriptive,
-                                onCheckedChange = null
-                            )
-                        }
-                    }
                 }
 
                 // This seems like a kludge; it forces HexColorPicker and BrightnessSlider to reposition the wheel
