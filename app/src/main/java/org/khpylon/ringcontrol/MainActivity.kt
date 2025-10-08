@@ -357,7 +357,7 @@ private fun WidgetPermissions (context: Context) {
     val notificationManager =
         context.getSystemService(android.app.Activity.NOTIFICATION_SERVICE) as NotificationManager
     var modesAccessPermission by remember { mutableStateOf(notificationManager.isNotificationPolicyAccessGranted) }
-    val launcher =
+    val modesLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
             modesAccessPermission = notificationManager.isNotificationPolicyAccessGranted
@@ -367,7 +367,7 @@ private fun WidgetPermissions (context: Context) {
     val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
     var batteryOptimized by remember { mutableStateOf(pm.isIgnoringBatteryOptimizations(packageName)) }
 
-    val launcher2 =
+    val batteryLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
             val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -414,10 +414,9 @@ private fun WidgetPermissions (context: Context) {
         isChecked = modesAccessPermission,
         onClick = {
             val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-            launcher.launch(intent)
+            modesLauncher.launch(intent)
         }
     )
-
 
     // Toggle control for battery optimization
     OptionSwitchRow(
@@ -434,7 +433,7 @@ private fun WidgetPermissions (context: Context) {
         isChecked = batteryOptimized,
         onClick = {
             val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-            launcher2.launch(intent)
+            batteryLauncher.launch(intent)
         }
     )
 
