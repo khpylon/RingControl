@@ -11,6 +11,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.graphics.drawable.Drawable
 import android.icu.text.MessageFormat
 import android.net.Uri
@@ -28,7 +33,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +41,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -83,14 +88,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -352,7 +361,7 @@ private fun OptionSwitchRow(
 }
 
 @Composable
-private fun WidgetPermissions (context: Context) {
+private fun WidgetPermissions(context: Context) {
     val storage = Storage(context)
     val notificationManager =
         context.getSystemService(android.app.Activity.NOTIFICATION_SERVICE) as NotificationManager
@@ -463,7 +472,7 @@ private fun WidgetPermissions (context: Context) {
 }
 
 @Composable
-private fun WidgetText (context: Context, enabled: Boolean) {
+private fun WidgetText(context: Context, enabled: Boolean) {
     val storage = Storage(context)
     var isTextVisible by remember { mutableStateOf(storage.textVisible) }
     var isTextDescriptive by remember { mutableStateOf(storage.textDescription) }
@@ -522,8 +531,91 @@ private fun WidgetText (context: Context, enabled: Boolean) {
 }
 
 @Composable
-private fun WidgetColorAndSize (context: Context, enabled: Boolean)
-{
+fun SampleIcon(context: Context, scale: Float, fgColor: Int, bgColor: Int) {
+    val size = DpSize(150.dp, 150.dp)
+    val bgBmp = createBitmap(
+        size.width.value.toInt(),
+        size.height.value.toInt(),
+        Bitmap.Config.ARGB_8888
+    )
+    val bgCanvas = Canvas(bgBmp)
+    val paint = Paint().apply {
+        color = bgColor
+        style = Paint.Style.FILL
+    }
+    bgCanvas.drawCircle(size.width.value / 2f, size.height.value / 2f, size.width.value / 2f, paint)
+
+    val drawable =
+        AppCompatResources.getDrawable(context, R.drawable.outline_volume_off_48) as Drawable
+
+    // Create a bitmap and canvas the same size as the drawable
+    val fgBmp = createBitmap(size.width.value.toInt(), size.height.value.toInt())
+    val fgCanvas = Canvas(fgBmp)
+
+    // Create secondary bitmap and canvas
+    val auxBgBmp = createBitmap(size.width.value.toInt(), size.height.value.toInt())
+    val audBgCanvas = Canvas(auxBgBmp)
+
+    // Fill with primary bitmap with the desired color.  This fills the entire canvas
+    paint.color = fgColor
+    paint.alpha = 0xff
+    paint.style = Paint.Style.FILL
+    fgCanvas.drawPaint(paint)
+
+    // Draw the image on the secondary canvas
+    drawable.setBounds(0, 0, bgCanvas.width, bgCanvas.width)
+    drawable.draw(audBgCanvas)
+
+    // Merge the image and the color
+    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
+    fgCanvas.drawBitmap(auxBgBmp, 0f, 0f, paint)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxHeight(0.75f)
+            .fillMaxWidth()
+    ) {
+        Spacer(modifier = Modifier.padding(3.dp))
+        Box {
+            Image(
+                bitmap = bgBmp.asImageBitmap(),
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .padding((5f * scale).dp)
+                    .height((100f * scale).dp)
+                    .width((100f * scale).dp),
+                contentDescription = "",
+            )
+            Image(
+                bitmap = fgBmp.asImageBitmap(),
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .padding((15f * scale).dp)
+                    .height((80f * scale).dp)
+                    .width((80f * scale).dp),
+                contentDescription = "",
+            )
+        }
+        Spacer(modifier = Modifier.padding((3 * scale).dp))
+        Text(
+            text = "Label",
+            style = TextStyle(
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                fontSize = (16.sp * scale)
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+        )
+    }
+}
+
+
+@SuppressLint("RestrictedApi")
+@Composable
+private fun WidgetColorAndSize(context: Context, enabled: Boolean) {
     val storage = Storage(context)
 
     // This seems like a kludge; it forces HexColorPicker and BrightnessSlider to reposition the wheel
@@ -583,6 +675,8 @@ private fun WidgetColorAndSize (context: Context, enabled: Boolean)
             }
         }
 
+        SampleIcon(context, widgetScale, fgColor, bgColor)
+
         Box()
         {
             val bgDrawable = AppCompatResources.getDrawable(
@@ -625,6 +719,7 @@ private fun WidgetColorAndSize (context: Context, enabled: Boolean)
                 contentDescription = "",
             )
         }
+
     }
 
     Row(
@@ -717,6 +812,7 @@ private fun WidgetColorAndSize (context: Context, enabled: Boolean)
                     storage.backgroundColor = bgColor
                     storage.widgetScale = widgetScale
                     Widget.updateWidget(context)
+                    GlanceWidget.updateWidget(context)
                     Toast.makeText(
                         context,
                         context.getString(R.string.changes_saved), Toast.LENGTH_SHORT
@@ -874,7 +970,7 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
 
     var showSettings by rememberSaveable { mutableStateOf(!notificationManager.isNotificationPolicyAccessGranted) }
 
-    if(config.orientation == Configuration.ORIENTATION_PORTRAIT) {
+    if (config.orientation == Configuration.ORIENTATION_PORTRAIT) {
 
         Column(
             modifier = modifier
@@ -898,7 +994,7 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 Column(
                     modifier = Modifier
                 ) {
-                    WidgetText (context, enabled)
+                    WidgetText(context, enabled)
                     WidgetColorAndSize(context, enabled)
                     Row(
                         modifier = Modifier
@@ -918,9 +1014,7 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 }
             }
         }
-    }
-
-    else {
+    } else {
         Row(
             modifier = Modifier
                 .padding(horizontal = 10.dp) // add some space on left and right

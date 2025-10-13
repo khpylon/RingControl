@@ -24,6 +24,8 @@ class AudioChangeReceiver : BroadcastReceiver() {
                     Storage(context).ringMode = audioManager.ringerMode
                     Log.d(Constants.LOGTAG, "widget update needed")
                     Widget.updateWidget(context)
+                    GlanceWidget.updateWidget(context)
+
                 }
 //                val notManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 //                val currentMode = notManager.currentInterruptionFilter
@@ -45,6 +47,7 @@ class AudioChangeReceiver : BroadcastReceiver() {
                     Storage(context).ringMode = audioManager.ringerMode
                     Log.d(Constants.LOGTAG, "widget update needed")
                     Widget.updateWidget(context)
+                    GlanceWidget.updateWidget(context)
                 }
                 nextAlarm(context)
             }
