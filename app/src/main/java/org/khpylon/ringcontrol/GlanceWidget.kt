@@ -90,6 +90,7 @@ class GlanceWidget : GlanceAppWidget() {
             // This variable is used to trigger recomposition, I'm pretty sure.  So it's not "unused"
             val update = currentState(key = updateKey) ?: false
 
+            val storage = Storage(context)
             val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
             val currentMode = audioManager.ringerMode
 
@@ -98,10 +99,12 @@ class GlanceWidget : GlanceAppWidget() {
                 AudioManager.RINGER_MODE_SILENT -> R.drawable.outline_volume_off_48
                 else -> R.drawable.outline_mobile_vibrate_48
             }
-            val label = when (currentMode) {
+            val label = if (storage.textDescription) when (currentMode) {
                 AudioManager.RINGER_MODE_NORMAL -> context.getString(R.string.normal_description)
                 AudioManager.RINGER_MODE_SILENT -> context.getString(R.string.silent_description)
                 else -> context.getString(R.string.vibrate_description)
+            } else {
+                context.getString(R.string.ringer_description)
             }
 
             val size = LocalSize.current
@@ -114,7 +117,7 @@ class GlanceWidget : GlanceAppWidget() {
             )
             val backgroundCanvas = Canvas(backgroundBitmap)
             val paint = Paint().apply {
-                color = Storage(context).backgroundColor
+                color = storage.backgroundColor
                 style = Paint.Style.FILL
             }
             backgroundCanvas.drawCircle(
@@ -129,7 +132,7 @@ class GlanceWidget : GlanceAppWidget() {
             val foregroundCanvas = Canvas(foregroundBitmap)
 
             // Fill the primary bitmap with the desired color.  This fills the entire canvas
-            paint.color = Storage(context).foregroundColor
+            paint.color = storage.foregroundColor
             paint.alpha = 0xff
             paint.style = Paint.Style.FILL
             foregroundCanvas.drawPaint(paint)
@@ -147,13 +150,12 @@ class GlanceWidget : GlanceAppWidget() {
             paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
             foregroundCanvas.drawBitmap(tempBitmap, 0f, 0f, paint)
 
-            val scale = Storage(context).widgetScale
+            val scale = storage.widgetScale
             GlanceTheme {
                 Column(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalAlignment = Alignment.CenterHorizontally,
-
-                    ) {
+                ) {
                     Spacer(modifier = GlanceModifier.padding(3.dp))
                     Image(
                         provider = ImageProvider(foregroundBitmap),
@@ -165,22 +167,24 @@ class GlanceWidget : GlanceAppWidget() {
                             .width((size.width.value * scale).dp)
                             .clickable(actionRunCallback<GlanceWidgetCallback>())
                     )
-
                     Spacer(modifier = GlanceModifier.padding(3.dp))
 
-                    Text(
-                        text = label,
-                        style = TextStyle(
-                            color = ColorProvider(
-                                day = androidx.compose.ui.graphics.Color.White,
-                                night = androidx.compose.ui.graphics.Color.White
+                    if (storage.textVisible) {
+                        Text(
+                            text = label,
+                            maxLines = 1,
+                            style = TextStyle(
+                                color = ColorProvider(
+                                    day = androidx.compose.ui.graphics.Color.White,
+                                    night = androidx.compose.ui.graphics.Color.White
+                                ),
+                                textAlign = TextAlign.Center,
+                                fontSize = (16.sp * scale)
                             ),
-                            textAlign = TextAlign.Center,
-                            fontSize = (16.sp * scale)
-                        ),
-                        modifier = GlanceModifier
-                            .fillMaxWidth()
-                    )
+                            modifier = GlanceModifier
+                                .fillMaxWidth()
+                        )
+                    }
                 }
             }
         }
