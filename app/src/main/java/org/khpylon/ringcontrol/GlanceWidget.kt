@@ -10,7 +10,6 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.drawable.Drawable
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -158,7 +157,7 @@ class GlanceWidget : GlanceAppWidget() {
                     Spacer(modifier = GlanceModifier.padding(3.dp))
                     Image(
                         provider = ImageProvider(foregroundBitmap),
-                        contentDescription = stringResource(R.string.current_ring_state_icon),
+                        contentDescription = context.getString(R.string.current_ring_state_icon),
                         modifier = GlanceModifier.wrapContentHeight()
                             .background(ImageProvider(backgroundBitmap))
                             .padding(5.dp)
