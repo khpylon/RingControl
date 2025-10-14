@@ -2,10 +2,11 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/app_widget_description"
     android:resizeMode="none"
-    android:minWidth="60dp"
-    android:minHeight="60dp"
+    android:targetCellWidth="1"
+    android:targetCellHeight="1"
     android:updatePeriodMillis="8640000"
     android:widgetCategory="home_screen"
+    android:widgetFeatures=""
     android:initialLayout="@layout/glance_widget"
     android:previewImage="@drawable/widget_icon"
     />

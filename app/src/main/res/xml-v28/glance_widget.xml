@@ -6,6 +6,7 @@
     android:minHeight="60dp"
     android:updatePeriodMillis="8640000"
     android:widgetCategory="home_screen"
+    android:widgetFeatures=""
     android:initialLayout="@layout/glance_widget"
     android:previewImage="@drawable/widget_icon"
     />
