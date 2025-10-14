@@ -9,7 +9,7 @@
     <string name="widget_needs_dnd_permissions">This widget requires \"Modes access\" to be enabled.</string>
     <string name="ringer">Ringer</string>
     <string name="background_string">Background color</string>
-    <string name="foreground_string">Foreground color</string>
+    <string name="foreground_string">Icon color</string>
     <string name="normal_description">Normal</string>
     <string name="vibrate_description">Vibrate</string>
     <string name="silent_description">Silent</string>
@@ -46,4 +46,5 @@
     <string name="permission_settings">Switch to permission settings.</string>
     <string name="widget_controls">Switch to widget appearance controls.</string>
     <string name="tooltip_help">Press and hold a description for more information.</string>
+    <string name="current_ring_state_icon">Current ring state icon</string>
 </resources>
