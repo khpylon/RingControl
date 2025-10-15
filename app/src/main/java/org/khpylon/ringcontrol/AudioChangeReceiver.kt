@@ -23,7 +23,6 @@ class AudioChangeReceiver : BroadcastReceiver() {
                 if (Storage(context).ringMode != audioManager.ringerMode) {
                     Storage(context).ringMode = audioManager.ringerMode
                     Log.d(Constants.LOGTAG, "widget update needed")
-                    Widget.updateWidget(context)
                     GlanceWidget.updateWidget(context)
 
                 }
@@ -46,7 +45,6 @@ class AudioChangeReceiver : BroadcastReceiver() {
                 if (stored != mode) {
                     Storage(context).ringMode = audioManager.ringerMode
                     Log.d(Constants.LOGTAG, "widget update needed")
-                    Widget.updateWidget(context)
                     GlanceWidget.updateWidget(context)
                 }
                 nextAlarm(context)

@@ -166,9 +166,10 @@ class MainActivity : ComponentActivity() {
         val context = applicationContext
 
         // Check whether there are any widgets on the screen
-        val manager = AppWidgetManager.getInstance(context)
-        val myWidgetProvider = ComponentName(context, Widget::class.java)
-        model.setStatus(manager.getAppWidgetIds(myWidgetProvider).size > 0)
+//        val manager = AppWidgetManager.getInstance(context)
+//        val myWidgetProvider = ComponentName(context, Widget::class.java)
+//        model.setStatus(manager.getAppWidgetIds(myWidgetProvider).size > 0)
+        model.setStatus(true)
 
         // Older versions require permission to write log files
         if (ContextCompat.checkSelfPermission(
@@ -223,7 +224,7 @@ class MainActivity : ComponentActivity() {
                         model = model
                     )
                 }
-                Widget.updateWidget(applicationContext)
+                GlanceWidget.updateWidget(applicationContext)
             }
         }
     }
@@ -500,7 +501,7 @@ private fun WidgetText(context: Context, enabled: Boolean) {
             if (enabled) {
                 isTextVisible = it
                 storage.textVisible = isTextVisible
-                Widget.updateWidget(context)
+                GlanceWidget.updateWidget(context)
             }
         },
         modifier = Modifier.alpha(if (enabled) 1.0f else 0.5f)
@@ -521,7 +522,7 @@ private fun WidgetText(context: Context, enabled: Boolean) {
                 if (enabled) {
                     isTextDescriptive = it
                     storage.textDescription = isTextDescriptive
-                    Widget.updateWidget(context)
+                    GlanceWidget.updateWidget(context)
                 }
             },
             modifier = Modifier.alpha(if (enabled) 1.0f else 0.5f)
@@ -676,50 +677,6 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean) {
         }
 
         SampleIcon(context, widgetScale, fgColor, bgColor)
-
-        Box()
-        {
-            val bgDrawable = AppCompatResources.getDrawable(
-                context,
-                R.drawable.background
-            ) as Drawable
-
-            val bgBitmap = Widget.drawBitmap(bgDrawable, bgColor, widgetScale)
-            Image(
-                bitmap = bgBitmap.asImageBitmap(),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp),
-                contentDescription = "",
-            )
-            val drawable = AppCompatResources.getDrawable(
-                context,
-                R.drawable.outline_volume_off_48
-            ) as Drawable
-
-            val bitmap =
-                Widget.drawBitmap(drawable, fgColor, widgetScale * .8f).asImageBitmap()
-            Image(
-                bitmap = bitmap,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp),
-                contentDescription = "",
-            )
-
-            val textBitmap = Widget.drawTextBitmap(
-                stringResource(R.string.sample_mode_label),
-                widgetScale
-            ).asImageBitmap()
-            Image(
-                bitmap = textBitmap,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp),
-                contentDescription = "",
-            )
-        }
-
     }
 
     Row(
@@ -811,7 +768,6 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean) {
                     storage.foregroundColor = fgColor
                     storage.backgroundColor = bgColor
                     storage.widgetScale = widgetScale
-                    Widget.updateWidget(context)
                     GlanceWidget.updateWidget(context)
                     Toast.makeText(
                         context,
