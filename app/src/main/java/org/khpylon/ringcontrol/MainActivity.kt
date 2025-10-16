@@ -4,8 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ComponentCaller
 import android.app.NotificationManager
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -44,25 +42,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
@@ -83,19 +85,26 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -164,6 +173,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val context = applicationContext
+        val storage = Storage(context)
 
         // Check whether there are any widgets on the screen
 //        val manager = AppWidgetManager.getInstance(context)
@@ -211,10 +221,162 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RingControlTheme {
+
+                // Create variables to store display state
+                var displayMenu by remember { mutableStateOf(false) }
+
+                var displayInstructions by remember { mutableStateOf(false) }
+                var displayWhatsNew by remember { mutableStateOf(storage.newInstall) }
+                var displayAppInfo by remember { mutableStateOf(false) }
+
                 Scaffold(
                     topBar = {
                         TopAppBar(
-                            title = { Text(context.getString(R.string.app_name)) }
+                            title = { Text(context.getString(R.string.app_name)) },
+                            actions = {
+
+                                // Creating Icon button for dropdown menu
+                                IconButton(onClick = { displayMenu = !displayMenu }) {
+                                    Icon(Icons.Default.MoreVert, "")
+                                }
+
+                                // Create a dropdown menu
+                                DropdownMenu(
+                                    expanded = displayMenu,
+                                    onDismissRequest = { displayMenu = false },
+                                ) {
+                                    // Add in each menu item
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            displayMenu = false
+                                            displayInstructions = true
+                                        },
+                                        text = { Text(text = stringResource(R.string.app_usage_menu)) }
+                                    )
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            displayMenu = false
+                                            displayWhatsNew = true
+                                        },
+                                        text = { Text(text = stringResource(R.string.release_notes_menu)) }
+                                    )
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            displayMenu = false
+                                            displayAppInfo = true
+                                        },
+                                        text = { Text(text = stringResource(R.string.about_menu)) }
+                                    )
+                                }
+
+                                // If the app has been updated, display a dialog explaining changes
+                                if (displayWhatsNew) {
+                                    storage.newInstall = false
+                                    val description = readChangeFile(context)
+
+                                    // Create a bullet list from each line of text.  Props to
+                                    // https://stackoverflow.com/questions/70724196 for the hint.
+                                    val bulletString = "\u2022\t"
+                                    val textStyle = LocalTextStyle.current
+                                    val textMeasurer = rememberTextMeasurer()
+                                    val bulletStringWidth = remember(textStyle, textMeasurer) {
+                                        textMeasurer.measure(
+                                            text = bulletString,
+                                            style = textStyle
+                                        ).size.width
+                                    }
+                                    val restLine =
+                                        with(LocalDensity.current) { bulletStringWidth.toSp() }
+                                    val paragraphStyle =
+                                        ParagraphStyle(textIndent = TextIndent(restLine = restLine))
+                                    val message = buildAnnotatedString {
+                                        description.forEach { text ->
+                                            withStyle(style = paragraphStyle) {
+                                                append(bulletString)
+                                                append(text)
+                                            }
+                                        }
+                                    }
+
+                                    InfoDialog(
+                                        onDismissRequest = { displayWhatsNew = false },
+                                        dialogTitle = stringResource(R.string.whats_new) + BuildConfig.VERSION_NAME,
+                                        dialogText = message
+                                    )
+                                }
+
+                                // Display information about the app itself
+                                if (displayAppInfo) {
+                                    InfoDialog(
+                                        onDismissRequest = { displayAppInfo = false },
+                                        dialogTitle = stringResource(R.string.about_the_app_title),
+                                        dialogText =
+                                            buildAnnotatedString {
+                                                append(context.getString(R.string.app_version))
+                                                append(": ")
+                                                append(BuildConfig.VERSION_NAME)
+                                                append("\n\n")
+                                                append(stringResource(R.string.about_more_info))
+                                            }
+                                    )
+                                }
+
+                                // Display instructions for using the app
+                                if (displayInstructions) {
+                                    InfoDialog(
+                                        onDismissRequest = { displayInstructions = false },
+                                        dialogTitle = stringResource(R.string.app_usage_title),
+                                        dialogText =
+                                            buildAnnotatedString {
+
+                                                // How to use the widget
+                                                withStyle(
+                                                    style = SpanStyle(
+                                                        fontSize = TextUnit(16f, TextUnitType.Sp),
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                ) {
+                                                    append(stringResource(R.string.using_the_widget_title))
+                                                }
+                                                append("\n\n")
+                                                append(stringResource(R.string.using_the_widget_instructions_part1))
+                                                append("\"")
+                                                append(stringResource(R.string.permission_settings))
+                                                append("\".) ")
+                                                append(stringResource(R.string.using_the_widget_instructions_part2))
+
+                                                // How to use the calendar with the widget
+                                                append("\n\n")
+                                                withStyle(
+                                                    style = SpanStyle(
+                                                        fontSize = TextUnit(16f, TextUnitType.Sp),
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                ) {
+                                                    append(stringResource(R.string.using_calendar_title))
+                                                }
+                                                append("\n\n")
+                                                append(stringResource(R.string.using_calendar_part1))
+                                                append("\n\n")
+                                                append(stringResource(R.string.using_calendar_part2))
+
+                                                // How to find out more about the app
+                                                append("\n\n")
+                                                withStyle(
+                                                    style = SpanStyle(
+                                                        fontSize = TextUnit(16f, TextUnitType.Sp),
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                ) {
+                                                    append(stringResource(R.string.more_info_title))
+                                                }
+                                                append("\n\n")
+                                                append(stringResource(R.string.more_info_part1))
+
+                                            }
+                                    )
+                                }
+                            }
                         )
                     }, modifier = Modifier.fillMaxSize()
                 )
@@ -228,6 +390,33 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+@Composable
+fun InfoDialog(
+    onDismissRequest: () -> Unit,
+    dialogTitle: String,
+    dialogText: AnnotatedString,
+) {
+    AlertDialog(
+        icon = {
+            Icon(Icons.Default.Info, contentDescription = "")
+        },
+        title = {
+            Text(text = dialogTitle)
+        },
+        text = {
+            Text(
+                text = dialogText,
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            )
+        },
+        onDismissRequest = {
+            onDismissRequest()
+        },
+        confirmButton = { },
+        dismissButton = { }
+    )
 }
 
 private fun checkLogcat(context: Context): String? {
@@ -306,19 +495,19 @@ private fun writeExternalFile(
 }
 
 //
-private fun readChangeFile(context: Context): String {
+private fun readChangeFile(context: Context): List<String> {
     val assetManager = context.assets
-    val message = StringBuilder()
+    val message = mutableListOf<String>()
     try {
         val inStream = assetManager.open("info.txt")
         val reader = BufferedReader(InputStreamReader(inStream))
         var line: String?
         while (reader.readLine().also { line = it } != null) {
-            message.append(line + "\n")
+            message.add(line!!)
         }
     } catch (_: Exception) {
     }
-    return message.toString()
+    return message
 }
 
 // Composable to display control switches and their descriptions
@@ -859,7 +1048,6 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
 
     val notificationManager =
         context.getSystemService(android.app.Activity.NOTIFICATION_SERVICE) as NotificationManager
-    var showDialog by remember { mutableStateOf(storage.newInstall) }
 
     var calPermission by remember {
         mutableStateOf(storage.isCalendarEnabled)
@@ -873,53 +1061,6 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
             CalendarAlarmReceiver.startAlarm(context)
         } else {
             CalendarAlarmReceiver.cancelAlarm(context)
-        }
-    }
-
-    // If the app has been updated, display a dialog explaining changes
-    if (showDialog) {
-        BasicAlertDialog(
-            onDismissRequest = {
-                storage.newInstall = false
-                showDialog = false
-            },
-        ) {
-            Surface(
-                modifier = Modifier
-                    .widthIn(max = 300.dp)
-                    .wrapContentHeight(),
-                shape = MaterialTheme.shapes.large,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = stringResource(R.string.whats_new) + BuildConfig.VERSION_NAME,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    HorizontalDivider(thickness = 2.dp)
-                    // Get the description from the asset file
-                    val description = readChangeFile(context)
-                    Text(text = description)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TextButton(
-                            onClick = {
-                                showDialog = false
-                                storage.newInstall = false
-                            }
-                        ) {
-                            Text(stringResource(R.string.dismiss_button))
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -952,21 +1093,6 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 ) {
                     WidgetText(context, enabled)
                     WidgetColorAndSize(context, enabled)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.Center
-                    )
-                    {}
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        text = stringResource(R.string.app_version) + BuildConfig.VERSION_NAME,
-                        modifier = Modifier
-                            .padding(start = 2.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
-
                 }
             }
         }
@@ -992,13 +1118,6 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 if (!showSettings) {
                     WidgetText(context, enabled)
                 }
-                Spacer(Modifier.weight(1f))
-                Text(
-                    text = stringResource(R.string.app_version) + BuildConfig.VERSION_NAME,
-                    modifier = Modifier
-                        .padding(start = 2.dp)
-                        .align(Alignment.CenterHorizontally)
-                )
 
             }
 

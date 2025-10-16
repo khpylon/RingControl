@@ -38,8 +38,8 @@
         \n\nThe widget will not function if this permission is disabled.</string>
     <string name="battery_tooltip">Unrestricted battery optimization is recommended so the
         widget will update when battery saving mode is enabled.</string>
-    <string name="calendar_tooltip">Silence the ringer for specific events in your calendar. Just add the text
-        #RingControl# or #RC# in the event\'s title or description.
+    <string name="calendar_tooltip">Silence the ringer for specific events in your calendar. Just
+        add the text #RingControl# or #RC# in the event\'s title or description.
         \n\nCalendar must be enabled in the app\'s permissions.</string>
     <string name="visible_desc_tooltip">Enable to display text below the widget.</string>
     <string name="mode_desc_tooltip">Enable to display the ring state in the text below the widget.</string>
@@ -47,4 +47,29 @@
     <string name="widget_controls">Switch to widget appearance controls.</string>
     <string name="tooltip_help">Press and hold a description for more information.</string>
     <string name="current_ring_state_icon">Current ring state icon</string>
+    <string name="using_the_widget_title">Using the widget</string>
+    <string name="using_the_widget_instructions_part1">"First, enable permissions for modes access and unrestricted battery optimization (you can do this within the app by clicking on "</string>
+    <string name="using_the_widget_instructions_part2">Second, be sure to place a widget on your
+        home screen. Once you\'ve done this, just tap the widget to change the ring mode. The
+        widget will show which mode is active (normal, vibrate, or silent).</string>
+    <string name="using_calendar_title">Controlling the ring state with calendar events</string>
+    <string name="using_calendar_part1">If you want your phone to enter Do Not Disturb mode during an
+        event in your Google calendar, add either #RC# or #RingControl# to the event\'s title or
+        description. You should do this at least one hour prior to the event\'s start. The mode will
+        change approximately one minute prior to the event\'s start, and revert back to the original
+        setting after the event. Events must be less than 24 hours, and cannot be all-day.</string>
+    <string name="using_calendar_part2">Remember, you need to give the app permission to read your
+        calendar. If you didn\'t do this when you first ran the app, do the following: go to
+        Settings, go to Apps, find the Ring Control App, and under Permissions set Calendar to
+        allowed.</string>
+    <string name="about_the_app_title">About The App</string>
+    <string name="about_more_info">Bug report or feature requests? Go to
+        https://github.com/khpylon/RingControl</string>
+    <string name="app_usage_title">App Usage</string>
+    <string name="more_info_title">More info</string>
+    <string name="more_info_part1">Visit the app\'s site on GitHub:
+        https://github.com/khpylon/RingControl</string>
+    <string name="app_usage_menu">App Usage</string>
+    <string name="release_notes_menu">Release Notes</string>
+    <string name="about_menu">About</string>
 </resources>
