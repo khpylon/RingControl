@@ -15,8 +15,8 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
 import androidx.core.net.toUri
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import kotlin.collections.isNotEmpty
 
 class ReadCalendars // Store context used locally.
@@ -71,8 +71,10 @@ internal constructor(private val mContext: Context) {
                     eventCursor.getString(eventCursor.getColumnIndex(CalendarContract.EventsEntity.DESCRIPTION))
                         .lowercase()
 
-                // Ignore all-day events.
-                if (!allDay && begin !== end) {
+                // Ignore all-day events and events longer than a day.
+                if (!allDay && begin !== end &&
+                    ChronoUnit.HOURS.between(begin.toInstant(), end.toInstant()) < 24
+                ) {
 
                     // If title or description contain the key phrase, process the event
                     val lowercaseTitle = title.lowercase()
