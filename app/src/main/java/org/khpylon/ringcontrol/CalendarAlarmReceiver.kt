@@ -37,8 +37,8 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
             )
         )
 
-        android.util.Log.d("MainActivity.CHANNEL_ID", "Next AlarmReceiver at $timeText")
-        android.util.Log.d("MainActivity.CHANNEL_ID", "isCalendarEvent is $isCalendarEvent")
+        android.util.Log.d(Constants.LOGTAG, "Next AlarmReceiver at $timeText")
+        android.util.Log.d(Constants.LOGTAG, "isCalendarEvent is $isCalendarEvent")
 
 //        val notificationManager =
 //            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -49,7 +49,7 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
 //        // If an event is active, or the user wants to see the app is active, display an notification
 //        if (events.isNotEmpty() && events[0].isEventActive(time.atZone(ZoneId.systemDefault()))) {
 //            val title = events[0].title
-//            android.util.Log.e("MainActivity.CHANNEL_ID", "event is '$title'")
+//            android.util.Log.e(Constants.LOGTAG, "event is '$title'")
 //            val notificationManager =
 //                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 //            val builder = NotificationCompat.Builder(context, NORMAL_NOTIFICATIONS)
@@ -120,7 +120,7 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
                 DateUtils.SECOND_IN_MILLIS,
                 pendingIntent
             )
-            android.util.Log.d("MainActivity.CHANNEL_ID", "starting alarm")
+            android.util.Log.d(Constants.LOGTAG, "starting alarm")
         }
 
         @JvmStatic
@@ -132,7 +132,7 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
 
             alarmManager.cancel(pendingIntent)
             pendingIntent.cancel()
-            android.util.Log.d("MainActivity.CHANNEL_ID", "canceling alarm")
+            android.util.Log.d(Constants.LOGTAG, "canceling alarm")
         }
 
     }
