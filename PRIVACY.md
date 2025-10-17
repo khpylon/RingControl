@@ -12,9 +12,8 @@ The Personal Information that we collect are used for providing and improving th
 The terms used in this Privacy Policy have the same meanings as in the Terms and Conditions, which is accessible in our GitHub site (https://github.com/khpylon/RingControl), unless otherwise defined in this Privacy Policy.
 
 ### Information Collection and Use
-In order to access information about your vehicle, we require you to provide your credentials (username and password) for your FordPass account.  This information is only stored on your device, in encrypted form,
-if "Save log-in credentials" is enabled under "Settings".  The credentials are transmitted over the Internet using HTTPS/SSL connections.  
-Credentials are deleted when "Save log-in credentials" is disabled.
+This app does not collect personal information.  If you use the app to change the ring mode based on events in your Google calendar, it only reads calendar entries
+and retains the beginning and ending times of relevant events as long as the event is in effect.  
 
 ### Cookies
 The app does not use cookies.
