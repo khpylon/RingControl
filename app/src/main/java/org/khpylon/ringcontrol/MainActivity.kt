@@ -43,6 +43,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -109,6 +110,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
+import androidx.glance.layout.padding
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -664,7 +666,6 @@ private fun WidgetPermissions(context: Context) {
 @Composable
 private fun WidgetText(context: Context, enabled: Boolean) {
     val storage = Storage(context)
-    var isTextVisible by remember { mutableStateOf(storage.textVisible) }
     var isTextDescriptive by remember { mutableStateOf(storage.textDescription) }
 
     if (!enabled) {
@@ -677,47 +678,24 @@ private fun WidgetText(context: Context, enabled: Boolean) {
         }
     }
 
-    // Toggle visibility of text on widget
+    // Toggle description of text on widget
     OptionSwitchRow(
-        tooltip = stringResource(R.string.visible_desc_tooltip),
+        tooltip = stringResource(R.string.mode_desc_tooltip),
         desc = buildAnnotatedString {
             withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                append(context.getString(R.string.visible_description))
+                append(context.getString(R.string.enable_mode_description))
             }
         },
-        isChecked = isTextVisible,
+        isChecked = isTextDescriptive,
         onClick = {
             if (enabled) {
-                isTextVisible = it
-                storage.textVisible = isTextVisible
+                isTextDescriptive = it
+                storage.textDescription = isTextDescriptive
                 GlanceWidget.updateWidget(context)
             }
         },
         modifier = Modifier.alpha(if (enabled) 1.0f else 0.5f)
-
     )
-
-    if (isTextVisible) {
-        // Toggle description of text on widget
-        OptionSwitchRow(
-            tooltip = stringResource(R.string.mode_desc_tooltip),
-            desc = buildAnnotatedString {
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                    append(context.getString(R.string.enable_mode_description))
-                }
-            },
-            isChecked = isTextDescriptive,
-            onClick = {
-                if (enabled) {
-                    isTextDescriptive = it
-                    storage.textDescription = isTextDescriptive
-                    GlanceWidget.updateWidget(context)
-                }
-            },
-            modifier = Modifier.alpha(if (enabled) 1.0f else 0.5f)
-
-        )
-    }
 }
 
 @Composable
@@ -768,11 +746,13 @@ fun SampleIcon(context: Context, scale: Float, fgColor: Int, bgColor: Int) {
             .fillMaxWidth()
     ) {
         Spacer(modifier = Modifier.padding(3.dp))
-        Box {
+        Box (modifier = Modifier
+            .wrapContentSize(),
+            contentAlignment = Alignment.Center
+        ) {
             Image(
                 bitmap = bgBmp.asImageBitmap(),
                 modifier = Modifier
-                    .wrapContentHeight()
                     .padding((5f * scale).dp)
                     .height((100f * scale).dp)
                     .width((100f * scale).dp),
@@ -787,18 +767,20 @@ fun SampleIcon(context: Context, scale: Float, fgColor: Int, bgColor: Int) {
                     .width((80f * scale).dp),
                 contentDescription = "",
             )
+
+            Text(
+                text = "Silent",
+                style = TextStyle(
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    fontSize = (28.sp * scale)
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(top = ((size.height.value - 56) * scale).dp)
+                    .fillMaxWidth()
+            )
         }
-        Spacer(modifier = Modifier.padding((3 * scale).dp))
-        Text(
-            text = "Label",
-            style = TextStyle(
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                fontSize = (16.sp * scale)
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-        )
     }
 }
 

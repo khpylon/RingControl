@@ -36,13 +36,16 @@ import androidx.glance.background
 import androidx.glance.color.ColorProvider
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.width
 import androidx.glance.layout.wrapContentHeight
+import androidx.glance.layout.wrapContentSize
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
@@ -99,13 +102,6 @@ class GlanceWidget : GlanceAppWidget() {
                 AudioManager.RINGER_MODE_SILENT -> R.drawable.outline_volume_off_48
                 else -> R.drawable.outline_mobile_vibrate_48
             }
-            val label = if (storage.textDescription) when (currentMode) {
-                AudioManager.RINGER_MODE_NORMAL -> context.getString(R.string.normal_description)
-                AudioManager.RINGER_MODE_SILENT -> context.getString(R.string.silent_description)
-                else -> context.getString(R.string.vibrate_description)
-            } else {
-                context.getString(R.string.ringer_description)
-            }
 
             val size = LocalSize.current
 
@@ -152,38 +148,49 @@ class GlanceWidget : GlanceAppWidget() {
 
             val scale = storage.widgetScale
             GlanceTheme {
-                Column(
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(modifier = GlanceModifier
+                    .wrapContentSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Spacer(modifier = GlanceModifier.padding(3.dp))
-                    Image(
-                        provider = ImageProvider(foregroundBitmap),
-                        contentDescription = context.getString(R.string.current_ring_state_icon),
-                        modifier = GlanceModifier.wrapContentHeight()
-                            .background(ImageProvider(backgroundBitmap))
-                            .padding(5.dp)
-                            .height((size.height.value * scale).dp)
-                            .width((size.width.value * scale).dp)
-                            .clickable(actionRunCallback<GlanceWidgetCallback>())
+                    Box (modifier = GlanceModifier
+                            .wrapContentSize(),
+                        contentAlignment = Alignment.Center
                     )
-                    Spacer(modifier = GlanceModifier.padding(3.dp))
-
-                    if (storage.textVisible) {
-                        Text(
-                            text = label,
-                            maxLines = 1,
-                            style = TextStyle(
-                                color = ColorProvider(
-                                    day = androidx.compose.ui.graphics.Color.White,
-                                    night = androidx.compose.ui.graphics.Color.White
-                                ),
-                                textAlign = TextAlign.Center,
-                                fontSize = (16.sp * scale)
-                            ),
+                    {
+                        Image(
+                            provider = ImageProvider(foregroundBitmap),
+                            contentDescription = context.getString(R.string.current_ring_state_icon),
                             modifier = GlanceModifier
-                                .fillMaxWidth()
+                                .background(ImageProvider(backgroundBitmap))
+                                .padding(5.dp)
+                                .height((size.height.value * scale).dp)
+                                .width((size.width.value * scale).dp)
+                                .clickable(actionRunCallback<GlanceWidgetCallback>())
                         )
+
+                        if (storage.textDescription) {
+                            val label = when (currentMode) {
+                                AudioManager.RINGER_MODE_NORMAL -> context.getString(R.string.normal_description)
+                                AudioManager.RINGER_MODE_SILENT -> context.getString(R.string.silent_description)
+                                else -> context.getString(R.string.vibrate_description)
+                            }
+
+                            Text(
+                                text = label,
+                                style = TextStyle(
+                                    color = ColorProvider(
+                                        day = androidx.compose.ui.graphics.Color.White,
+                                        night = androidx.compose.ui.graphics.Color.White
+                                    ),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = (16.sp * scale)
+                                ),
+                                maxLines = 1,
+                                modifier = GlanceModifier
+                                    .padding(top = ((size.height.value - 8) * scale).dp)
+                                    .fillMaxWidth()
+                            )
+                        }
                     }
                 }
             }
