@@ -664,10 +664,8 @@ private fun WidgetPermissions(context: Context) {
 }
 
 @Composable
-private fun WidgetText(context: Context, enabled: Boolean) {
-    val storage = Storage(context)
-    var isTextDescriptive by remember { mutableStateOf(storage.textDescription) }
-
+private fun WidgetText(context: Context, enabled: Boolean,
+                       showText: Boolean, onClick: (Boolean) -> Unit) {
     if (!enabled) {
         Row(modifier = Modifier.fillMaxWidth())
         {
@@ -686,20 +684,14 @@ private fun WidgetText(context: Context, enabled: Boolean) {
                 append(context.getString(R.string.enable_mode_description))
             }
         },
-        isChecked = isTextDescriptive,
-        onClick = {
-            if (enabled) {
-                isTextDescriptive = it
-                storage.textDescription = isTextDescriptive
-                GlanceWidget.updateWidget(context)
-            }
-        },
+        isChecked = showText,
+        onClick = onClick,
         modifier = Modifier.alpha(if (enabled) 1.0f else 0.5f)
     )
 }
 
 @Composable
-fun SampleIcon(context: Context, scale: Float, fgColor: Int, bgColor: Int) {
+fun SampleIcon(context: Context, scale: Float, fgColor: Int, bgColor: Int, isTextDescription: Boolean) {
     val size = DpSize(150.dp, 150.dp)
     val bgBmp = createBitmap(
         size.width.value.toInt(),
@@ -768,18 +760,20 @@ fun SampleIcon(context: Context, scale: Float, fgColor: Int, bgColor: Int) {
                 contentDescription = "",
             )
 
-            Text(
-                text = "Silent",
-                style = TextStyle(
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    fontSize = (28.sp * scale)
-                ),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(top = ((size.height.value - 56) * scale).dp)
-                    .fillMaxWidth()
-            )
+            if (isTextDescription) {
+                Text(
+                    text = "Silent",
+                    style = TextStyle(
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        fontSize = (28.sp * scale)
+                    ),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(top = ((size.height.value - 56) * scale).dp)
+                        .fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -787,7 +781,7 @@ fun SampleIcon(context: Context, scale: Float, fgColor: Int, bgColor: Int) {
 
 @SuppressLint("RestrictedApi")
 @Composable
-private fun WidgetColorAndSize(context: Context, enabled: Boolean) {
+private fun WidgetColorAndSize(context: Context, enabled: Boolean, showText: Boolean) {
     val storage = Storage(context)
 
     // This seems like a kludge; it forces HexColorPicker and BrightnessSlider to reposition the wheel
@@ -796,7 +790,6 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean) {
     var fgColor by remember { mutableIntStateOf(storage.foregroundColor and 0xffffff) }
     var initialColor by remember { mutableIntStateOf(bgColor) }
     var widgetScale by remember { mutableFloatStateOf(storage.widgetScale) }
-
     var selectedIndex by remember { mutableIntStateOf(0) }
 
     val buttonColors = ButtonDefaults.buttonColors(
@@ -847,7 +840,7 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean) {
             }
         }
 
-        SampleIcon(context, widgetScale, fgColor, bgColor)
+        SampleIcon(context, widgetScale, fgColor, bgColor, showText)
     }
 
     Row(
@@ -1046,8 +1039,8 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
         }
     }
 
-
     var showSettings by rememberSaveable { mutableStateOf(!notificationManager.isNotificationPolicyAccessGranted) }
+    var showText by rememberSaveable { mutableStateOf( storage.textDescription) }
 
     if (config.orientation == Configuration.ORIENTATION_PORTRAIT) {
 
@@ -1073,8 +1066,14 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 Column(
                     modifier = Modifier
                 ) {
-                    WidgetText(context, enabled)
-                    WidgetColorAndSize(context, enabled)
+                    WidgetText(context, enabled, showText,
+                        onClick = { value ->
+                            showText = value
+                            storage.textDescription = value
+                            GlanceWidget.updateWidget(context)
+                        }
+                    )
+                    WidgetColorAndSize(context, enabled, showText)
                 }
             }
         }
@@ -1098,9 +1097,14 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
 
                 // Display settings information
                 if (!showSettings) {
-                    WidgetText(context, enabled)
+                    WidgetText(context, enabled, showText,
+                        onClick = { value ->
+                            showText = value
+                            storage.textDescription = value
+                            GlanceWidget.updateWidget(context)
+                        }
+                    )
                 }
-
             }
 
             Column(
@@ -1111,7 +1115,7 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 if (showSettings) {
                     WidgetPermissions(context)
                 } else {
-                    WidgetColorAndSize(context, enabled)
+                    WidgetColorAndSize(context, enabled, showText)
                 }
             }
         }
