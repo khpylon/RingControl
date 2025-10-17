@@ -19,11 +19,10 @@ and retains the beginning and ending times of relevant events as long as the eve
 The app does not use cookies.
 
 ### Location Information
-The app does not use location information of your phone.  The app does retrieve your vehicle's location information, if available, and displays it on the widget.  This information is stored on your phone.
+The app does not use location information of your phone.
 
 ### Device Information
-The app does not collect information about your device.  It will collect information about the performance of the app, including Internet transmissions, when "Enable logging" is enabled under "Settings".  This information
-is only stored on your phone and not transmitted to anyone.
+The app does not collect information about your device.  If an application crash occurs, it will collect information about the crash and store it on your phone.  This information is not transmitted to anyone.
 
 ### Security
 We value your trust in providing us your Personal Information, thus we are striving to use commercially acceptable means of protecting it.  But remember that no method of transmission over the internet, or method of electronic storage is 100% secure and reliable, and we cannot guarantee its absolute security.
