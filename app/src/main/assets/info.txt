@@ -1,5 +1,4 @@
-1) Allow calender events to silence ringer; just add #RC# or #RingControl# to the title or description of an event.
-2) Add setting to change battery optimization.
-3) Reorganize main screen to switch between widget appearance controls and permission settings.
-4) New logo for the app.
-5) Minor bug fixes.
+Support for landscape orientation.
+Make widget behave better with other app launchers.
+Add drop-down menu to access use instructions, release notes, and info about the app.
+Change placement of mode description on the widget.
