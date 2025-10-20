@@ -1,4 +1,1 @@
-Support for landscape orientation.
-Make widget behave better with other app launchers.
-Add drop-down menu to access use instructions, release notes, and info about the app.
-Change placement of mode description on the widget.
+Allow calender entries to also set the ring mode to vibrate.

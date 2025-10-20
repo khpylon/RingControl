@@ -56,7 +56,8 @@
     <string name="using_calendar_title">Controlling the ring state with calendar events</string>
     <string name="using_calendar_part1">If you want your phone to enter Do Not Disturb mode during an
         event in your Google calendar, add either #RC# or #RingControl# to the event\'s title or
-        description. You should do this at least one hour prior to the event\'s start. The mode will
+        description (to set the phone to vibrate instead, use #RC/V# or #RingControl/V#).
+        You should do this at least one hour prior to the event\'s start. The mode will
         change approximately one minute prior to the event\'s start, and revert back to the original
         setting after the event. Events must be less than 24 hours, and cannot be all-day.</string>
     <string name="using_calendar_part2">Remember, you need to give the app permission to read your

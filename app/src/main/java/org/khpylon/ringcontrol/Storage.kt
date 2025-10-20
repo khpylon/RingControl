@@ -20,7 +20,8 @@ object StorageConstants {
     const val RING_STATUS: String = "ring_status"
     const val CALENDAR_STATUS: String = "calendar_status"
     const val INACTIVE: Int = 0
-    const val ACTIVE: Int = 1
+    const val SILENT: Int = 1
+    const val VIBRATE: Int = 2
 
 }
 
@@ -137,7 +138,7 @@ class Storage(private val context: Context) {
                 StorageConstants.TAG,
                 Context.MODE_PRIVATE
             )
-            return pref.getInt(StorageConstants.APP_STATE, 0)
+            return pref.getInt(StorageConstants.APP_STATE, StorageConstants.INACTIVE)
         }
         set(id) {
             val pref = context.getSharedPreferences(

@@ -7,7 +7,8 @@ class EventInfo(
     _beginTime: ZonedDateTime,
     val endTime: ZonedDateTime,
     id: Int,
-    val title: String
+    val title: String,
+    val isVibrate: Boolean
 ) {
     val eventId: Long = id.toLong()
 

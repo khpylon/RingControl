@@ -19,8 +19,30 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.collections.isNotEmpty
 
+private const val NO_ANNOTATION = 0
+private const val DND_ANNOTATION = 1
+private const val VIBRATE_ANNOTATION = 2
+
 class ReadCalendars // Store context used locally.
 internal constructor(private val mContext: Context) {
+
+    private fun checkForAnnotations(string: String): Int {
+        val lowercaseString = string.lowercase()
+
+        return if (lowercaseString.contains("#ringcontrol/v#") ||
+            lowercaseString.contains("#ring control/v#") ||
+            lowercaseString.contains("#rc/v#")
+        ) {
+            VIBRATE_ANNOTATION
+        } else if (lowercaseString.contains("#ringcontrol#") ||
+            lowercaseString.contains("#ring control#") ||
+            lowercaseString.contains("#rc#")
+        ) {
+            DND_ANNOTATION
+        } else {
+            NO_ANNOTATION
+        }
+    }
 
     // Find all calendar events within a certain interval.
     @SuppressLint("Range")
@@ -76,23 +98,21 @@ internal constructor(private val mContext: Context) {
                     ChronoUnit.HOURS.between(begin.toInstant(), end.toInstant()) < 24
                 ) {
 
+                    val titleMatch = checkForAnnotations(title)
+                    val descriptionMatch = checkForAnnotations(description)
                     // If title or description contain the key phrase, process the event
-                    val lowercaseTitle = title.lowercase()
-                    if (lowercaseTitle.contains("#ringcontrol#") ||
-                        lowercaseTitle.contains("#ring control#") ||
-                        lowercaseTitle.contains("#rc#") ||
-                        description.contains("#ringcontrol#") ||
-                        description.contains("#ring control#") ||
-                        description.contains("#rc#")
-                    ) {
+
+                    if (titleMatch != NO_ANNOTATION || descriptionMatch != NO_ANNOTATION) {
                         val endInMillis = end.toInstant().toEpochMilli()
+                        val isVibrate = titleMatch == VIBRATE_ANNOTATION
+                                || descriptionMatch == VIBRATE_ANNOTATION
                         if (endInMillis > lastEndTime) {
                             lastEndTime = endInMillis
                             events.add(
                                 EventInfo(
                                     ZonedDateTime.ofInstant(begin.toInstant(), zoneId),
                                     ZonedDateTime.ofInstant(end.toInstant(), zoneId),
-                                    eventId, title
+                                    eventId, title, isVibrate
                                 )
                             )
                             Log.e(Constants.LOGTAG, "Found event '$title' ($eventId)")
@@ -138,11 +158,11 @@ internal constructor(private val mContext: Context) {
                 // save current ringer setting
                 appInfo.ringStatus = am.getRingerMode()
                 // silence the ringer
-                am.setRingerMode(AudioManager.RINGER_MODE_SILENT)
+                am.setRingerMode(if (events[0].isVibrate) AudioManager.RINGER_MODE_VIBRATE else AudioManager.RINGER_MODE_SILENT)
                 // save event id
                 appInfo.eventId = events[0].eventId
                 // We are now handling an event.
-                appInfo.appState = StorageConstants.ACTIVE
+                appInfo.appState = if (events[0].isVibrate) StorageConstants.VIBRATE else StorageConstants.SILENT
 
                 val endTime = events[0].endTime
                 val title = events[0].title
@@ -178,19 +198,21 @@ internal constructor(private val mContext: Context) {
                 val am: AudioManager =
                     mContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+                // If the ringer status has not been changed since we modified it, restore it.
                 val curRinger = am.ringerMode
-                // If the ringer status has not been changed since we turned it off, restore it.
-                if (curRinger == AudioManager.RINGER_MODE_SILENT) {
+                val appState = appInfo.appState
+                if ((appState == StorageConstants.SILENT && curRinger == AudioManager.RINGER_MODE_SILENT)
+                    || (appState == StorageConstants.VIBRATE && curRinger == AudioManager.RINGER_MODE_VIBRATE)) {
                     Log.d(Constants.LOGTAG, "findEvents() restoring ringer")
                     am.ringerMode = appInfo.ringStatus
                 }
                 appInfo.appState = StorageConstants.INACTIVE
                 Log.d(Constants.LOGTAG, "findEvents() going INACTIVE")
 
-            // Otherwise there's already another active event
+                // Otherwise there's already another active event
             } else {
                 // save new event id
-                appInfo.appState = StorageConstants.ACTIVE
+                appInfo.appState = StorageConstants.SILENT
 
                 val endTime = events[0].endTime
                 val title = events[0].title
