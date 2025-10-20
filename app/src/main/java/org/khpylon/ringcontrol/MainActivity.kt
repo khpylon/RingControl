@@ -9,11 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
 import android.graphics.drawable.Drawable
 import android.icu.text.MessageFormat
 import android.net.Uri
@@ -42,7 +37,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -86,7 +80,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -94,23 +87,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.createBitmap
-import androidx.glance.layout.padding
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -118,6 +106,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+import org.khpylon.ringcontrol.GlanceWidget.Companion.drawIcon
 import org.khpylon.ringcontrol.ui.theme.RingControlTheme
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
@@ -664,8 +653,10 @@ private fun WidgetPermissions(context: Context) {
 }
 
 @Composable
-private fun WidgetText(context: Context, enabled: Boolean,
-                       showText: Boolean, onClick: (Boolean) -> Unit) {
+private fun WidgetText(
+    context: Context, enabled: Boolean,
+    showText: Boolean, onClick: (Boolean) -> Unit
+) {
     if (!enabled) {
         Row(modifier = Modifier.fillMaxWidth())
         {
@@ -691,44 +682,20 @@ private fun WidgetText(context: Context, enabled: Boolean,
 }
 
 @Composable
-fun SampleIcon(context: Context, scale: Float, fgColor: Int, bgColor: Int, isTextDescription: Boolean) {
-    val size = DpSize(150.dp, 150.dp)
-    val bgBmp = createBitmap(
-        size.width.value.toInt(),
-        size.height.value.toInt(),
-        Bitmap.Config.ARGB_8888
-    )
-    val bgCanvas = Canvas(bgBmp)
-    val paint = Paint().apply {
-        color = bgColor
-        style = Paint.Style.FILL
-    }
-    bgCanvas.drawCircle(size.width.value / 2f, size.height.value / 2f, size.width.value / 2f, paint)
-
+fun SampleIcon(
+    context: Context,
+    scale: Float,
+    fgColor: Int,
+    bgColor: Int,
+    isTextDescription: Boolean
+) {
     val drawable =
         AppCompatResources.getDrawable(context, R.drawable.outline_volume_off_48) as Drawable
 
-    // Create a bitmap and canvas the same size as the drawable
-    val fgBmp = createBitmap(size.width.value.toInt(), size.height.value.toInt())
-    val fgCanvas = Canvas(fgBmp)
+    val textDescription =
+        if (isTextDescription) context.getString(R.string.normal_description) else null
 
-    // Create secondary bitmap and canvas
-    val auxBgBmp = createBitmap(size.width.value.toInt(), size.height.value.toInt())
-    val audBgCanvas = Canvas(auxBgBmp)
-
-    // Fill with primary bitmap with the desired color.  This fills the entire canvas
-    paint.color = fgColor
-    paint.alpha = 0xff
-    paint.style = Paint.Style.FILL
-    fgCanvas.drawPaint(paint)
-
-    // Draw the image on the secondary canvas
-    drawable.setBounds(0, 0, bgCanvas.width, bgCanvas.width)
-    drawable.draw(audBgCanvas)
-
-    // Merge the image and the color
-    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
-    fgCanvas.drawBitmap(auxBgBmp, 0f, 0f, paint)
+    val bitmap = drawIcon(drawable, fgColor, bgColor, textDescription)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -738,42 +705,19 @@ fun SampleIcon(context: Context, scale: Float, fgColor: Int, bgColor: Int, isTex
             .fillMaxWidth()
     ) {
         Spacer(modifier = Modifier.padding(3.dp))
-        Box (modifier = Modifier
-            .wrapContentSize(),
+        Box(
+            modifier = Modifier
+                .wrapContentSize(),
             contentAlignment = Alignment.Center
         ) {
             Image(
-                bitmap = bgBmp.asImageBitmap(),
+                bitmap = bitmap.asImageBitmap(),
                 modifier = Modifier
                     .padding((5f * scale).dp)
                     .height((100f * scale).dp)
                     .width((100f * scale).dp),
                 contentDescription = "",
             )
-            Image(
-                bitmap = fgBmp.asImageBitmap(),
-                modifier = Modifier
-                    .wrapContentHeight()
-                    .padding((15f * scale).dp)
-                    .height((80f * scale).dp)
-                    .width((80f * scale).dp),
-                contentDescription = "",
-            )
-
-            if (isTextDescription) {
-                Text(
-                    text = "Silent",
-                    style = TextStyle(
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        fontSize = (28.sp * scale)
-                    ),
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(top = ((size.height.value - 56) * scale).dp)
-                        .fillMaxWidth()
-                )
-            }
         }
     }
 }
@@ -1040,7 +984,7 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
     }
 
     var showSettings by rememberSaveable { mutableStateOf(!notificationManager.isNotificationPolicyAccessGranted) }
-    var showText by rememberSaveable { mutableStateOf( storage.textDescription) }
+    var showText by rememberSaveable { mutableStateOf(storage.textDescription) }
 
     if (config.orientation == Configuration.ORIENTATION_PORTRAIT) {
 
@@ -1066,7 +1010,8 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 Column(
                     modifier = Modifier
                 ) {
-                    WidgetText(context, enabled, showText,
+                    WidgetText(
+                        context, enabled, showText,
                         onClick = { value ->
                             showText = value
                             storage.textDescription = value
@@ -1097,7 +1042,8 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
 
                 // Display settings information
                 if (!showSettings) {
-                    WidgetText(context, enabled, showText,
+                    WidgetText(
+                        context, enabled, showText,
                         onClick = { value ->
                             showText = value
                             storage.textDescription = value

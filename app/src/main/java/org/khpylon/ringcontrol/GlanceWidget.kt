@@ -10,9 +10,10 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.drawable.Drawable
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -32,23 +33,13 @@ import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.updateAppWidgetState
-import androidx.glance.background
-import androidx.glance.color.ColorProvider
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
-import androidx.glance.layout.Box
 import androidx.glance.layout.Column
-import androidx.glance.layout.Spacer
-import androidx.glance.layout.fillMaxHeight
-import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.width
-import androidx.glance.layout.wrapContentHeight
 import androidx.glance.layout.wrapContentSize
-import androidx.glance.text.Text
-import androidx.glance.text.TextAlign
-import androidx.glance.text.TextStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -74,6 +65,83 @@ class GlanceWidget : GlanceAppWidget() {
                 }
             }
         }
+
+        // Assemble the icon used in the widget and the app
+        @JvmStatic
+        fun drawIcon(
+            drawable: Drawable, fgColor: Int, bgColor: Int, textDescription: String?
+        ): Bitmap {
+            val size = DpSize(150.dp, 150.dp)
+
+            // Create circular background centered in the image space
+            val bgBmp = createBitmap(
+                size.width.value.toInt(),
+                size.height.value.toInt(),
+                Bitmap.Config.ARGB_8888
+            )
+            val bgCanvas = Canvas(bgBmp)
+            val paint = Paint().apply {
+                color = bgColor
+                style = Paint.Style.FILL
+            }
+            bgCanvas.drawCircle(
+                size.width.value / 2f,
+                size.height.value / 2f,
+                size.width.value / 2f,
+                paint
+            )
+
+            // Create a bitmap and canvas the same size as the drawable
+            val fgBmp = createBitmap(size.width.value.toInt(), size.height.value.toInt())
+            val fgCanvas = Canvas(fgBmp)
+
+            // Create secondary bitmap and canvas
+            val auxBgBmp = createBitmap(size.width.value.toInt(), size.height.value.toInt())
+            val auxBgCanvas = Canvas(auxBgBmp)
+
+            // Fill with primary bitmap with the desired color.  This fills the entire canvas
+            paint.color = fgColor
+            paint.alpha = 0xff
+            paint.style = Paint.Style.FILL
+            fgCanvas.drawPaint(paint)
+
+            // Draw the image on the secondary canvas
+            val fgOffset = (fgBmp.width * 0.1f).toInt()
+            drawable.setBounds(fgOffset, fgOffset, fgBmp.width - fgOffset, fgBmp.height - fgOffset)
+            drawable.draw(auxBgCanvas)
+
+            // Merge the image and the color
+            paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
+            fgCanvas.drawBitmap(auxBgBmp, 0f, 0f, paint)
+
+            // Draw image over background
+            paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_OVER)
+            fgCanvas.drawBitmap(bgBmp, 0f, 0f, paint)
+
+            // If descriptions are enabled, add the text
+            textDescription?.let {
+
+                // Clear the canvas to start over
+                auxBgCanvas.drawColor(Color.Transparent.toArgb())
+
+                // Set text attributes
+                paint.setColor(Color.White.toArgb())
+                paint.textSize = 32f // Set text size in pixels
+                paint.isAntiAlias = true // Smooth the text edges
+                paint.textAlign = Paint.Align.CENTER
+
+                // Draw text at bottom of canvas
+                auxBgCanvas.drawText(
+                    textDescription,
+                    auxBgCanvas.width / 2f, auxBgCanvas.height * 1.0f, paint
+                )
+
+                // Merge in the text
+                paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
+                fgCanvas.drawBitmap(auxBgBmp, 0f, 0f, paint)
+            }
+            return fgBmp
+        }
     }
 
     override val sizeMode = SizeMode.Responsive(
@@ -97,101 +165,46 @@ class GlanceWidget : GlanceAppWidget() {
             val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
             val currentMode = audioManager.ringerMode
 
+            // Get icon for mode
             val icon = when (currentMode) {
                 AudioManager.RINGER_MODE_NORMAL -> R.drawable.outline_volume_up_48
                 AudioManager.RINGER_MODE_SILENT -> R.drawable.outline_volume_off_48
                 else -> R.drawable.outline_mobile_vibrate_48
             }
 
-            val size = LocalSize.current
+            // Get description for mode
+            val label = if (storage.textDescription) {
+                when (currentMode) {
+                    AudioManager.RINGER_MODE_NORMAL -> context.getString(R.string.normal_description)
+                    AudioManager.RINGER_MODE_SILENT -> context.getString(R.string.silent_description)
+                    else -> context.getString(R.string.vibrate_description)
+                }
+            } else ""
 
-            // Create widget background
-            val backgroundBitmap = createBitmap(
-                size.width.value.toInt(),
-                size.height.value.toInt(),
-                Bitmap.Config.ARGB_8888
-            )
-            val backgroundCanvas = Canvas(backgroundBitmap)
-            val paint = Paint().apply {
-                color = storage.backgroundColor
-                style = Paint.Style.FILL
-            }
-            backgroundCanvas.drawCircle(
-                size.width.value / 2f,
-                size.height.value / 2f,
-                size.width.value / 2f,
-                paint
-            )
-
-            // Create primary bitmap and canvas
-            val foregroundBitmap = createBitmap(size.width.value.toInt(), size.height.value.toInt())
-            val foregroundCanvas = Canvas(foregroundBitmap)
-
-            // Fill the primary bitmap with the desired color.  This fills the entire canvas
-            paint.color = storage.foregroundColor
-            paint.alpha = 0xff
-            paint.style = Paint.Style.FILL
-            foregroundCanvas.drawPaint(paint)
-
-            // Create a temporary bitmap and canvas
-            val tempBitmap = createBitmap(size.width.value.toInt(), size.height.value.toInt())
-            val tempCanvas = Canvas(tempBitmap)
-
-            // Draw the image on the temporary canvas
+            // Assemble the icon
             val drawable = AppCompatResources.getDrawable(context, icon) as Drawable
-            drawable.setBounds(0, 0, backgroundCanvas.width, backgroundCanvas.width)
-            drawable.draw(tempCanvas)
+            val bitmap = drawIcon(
+                drawable, storage.foregroundColor, storage.backgroundColor,label
+            )
 
-            // Merge the image and the color
-            paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
-            foregroundCanvas.drawBitmap(tempBitmap, 0f, 0f, paint)
-
+            val size = LocalSize.current
             val scale = storage.widgetScale
             GlanceTheme {
-                Column(modifier = GlanceModifier
-                    .wrapContentSize(),
+                Column(
+                    modifier = GlanceModifier
+                        .wrapContentSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Box (modifier = GlanceModifier
-                            .wrapContentSize(),
-                        contentAlignment = Alignment.Center
+                    Image(
+                        provider = ImageProvider(bitmap),
+                        contentDescription = context.getString(R.string.current_ring_state_icon),
+                        modifier = GlanceModifier
+                            .padding(5.dp)
+                            .width((size.width.value * scale).dp)
+                            .height((size.height.value * scale).dp)
+                            .clickable(actionRunCallback<GlanceWidgetCallback>())
                     )
-                    {
-                        Image(
-                            provider = ImageProvider(foregroundBitmap),
-                            contentDescription = context.getString(R.string.current_ring_state_icon),
-                            modifier = GlanceModifier
-                                .background(ImageProvider(backgroundBitmap))
-                                .padding(5.dp)
-                                .height((size.height.value * scale).dp)
-                                .width((size.width.value * scale).dp)
-                                .clickable(actionRunCallback<GlanceWidgetCallback>())
-                        )
-
-                        if (storage.textDescription) {
-                            val label = when (currentMode) {
-                                AudioManager.RINGER_MODE_NORMAL -> context.getString(R.string.normal_description)
-                                AudioManager.RINGER_MODE_SILENT -> context.getString(R.string.silent_description)
-                                else -> context.getString(R.string.vibrate_description)
-                            }
-
-                            Text(
-                                text = label,
-                                style = TextStyle(
-                                    color = ColorProvider(
-                                        day = androidx.compose.ui.graphics.Color.White,
-                                        night = androidx.compose.ui.graphics.Color.White
-                                    ),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = (16.sp * scale)
-                                ),
-                                maxLines = 1,
-                                modifier = GlanceModifier
-                                    .padding(top = ((size.height.value - 8) * scale).dp)
-                                    .fillMaxWidth()
-                            )
-                        }
-                    }
                 }
             }
         }
