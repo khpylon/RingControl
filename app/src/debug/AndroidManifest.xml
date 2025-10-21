@@ -40,12 +40,5 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
-
-        <service
-            android:name=".DetectRingModeChange"
-            android:foregroundServiceType="shortService"
-            android:enabled="true"
-            android:exported="false">
-        </service>
     </application>
 </manifest>
