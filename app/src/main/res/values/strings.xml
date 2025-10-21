@@ -15,7 +15,6 @@
     <string name="vibrate_description">Vibrate</string>
     <string name="silent_description">Silent</string>
     <string name="ringer_description">Ringer</string>
-    <string name="no_widgets_notice">The options below are disabled until a widget is placed on the screen.</string>
     <string name="changes_saved">Widget changes saved.</string>
     <string name="logcat_crashfile_formatstring">Logcat crash file \"{0}.txt\" copied to Download folder.</string>
     <string name="ring_control_notifications_channel">Ring Control notifications channel</string>

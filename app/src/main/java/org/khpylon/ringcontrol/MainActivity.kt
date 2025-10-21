@@ -120,43 +120,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-// This viewmodel is used to store the state of whether or not any widgets are on the desktop
-class WidgetViewModel : ViewModel() {
-
-    // true means there are widgets present
-    private val _status = MutableLiveData(false)
-    val status: LiveData<Boolean> = _status
-
-    // set the status directly
-    fun setStatus(value: Boolean) {
-        _status.value = value
-    }
-
-    // disable status when last widget deleted
-    fun widgetsDisabled() {
-        _status.value = false
-    }
-
-    // enable status when first widget added
-    fun widgetsEnabled() {
-        _status.value = true
-    }
-}
-
 class MainActivity : ComponentActivity() {
-    var model = WidgetViewModel()
-
-    override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
-        super.onNewIntent(intent, caller)
-        val action = intent.action
-        if (action.equals(Constants.WIDGETS_ENABLED, ignoreCase = true)) {
-            Log.d(Constants.LOGTAG, "onNewIntent with WIDGETS_ENABLED")
-            model.widgetsEnabled()
-        } else if (action.equals(Constants.WIDGETS_DISABLED, ignoreCase = true)) {
-            Log.d(Constants.LOGTAG, "onNewIntent with WIDGETS_DISABLED")
-            model.widgetsDisabled()
-        }
-    }
 
     @SuppressLint("NewApi")
     @OptIn(ExperimentalMaterial3Api::class)
@@ -165,12 +129,6 @@ class MainActivity : ComponentActivity() {
 
         val context = applicationContext
         val storage = Storage(context)
-
-        // Check whether there are any widgets on the screen
-//        val manager = AppWidgetManager.getInstance(context)
-//        val myWidgetProvider = ComponentName(context, Widget::class.java)
-//        model.setStatus(manager.getAppWidgetIds(myWidgetProvider).size > 0)
-        model.setStatus(true)
 
         // Older versions require permission to write log files
         if (ContextCompat.checkSelfPermission(
@@ -373,8 +331,7 @@ class MainActivity : ComponentActivity() {
                 )
                 { innerPadding ->
                     MainApplication(
-                        modifier = Modifier.padding(innerPadding),
-                        model = model
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
                 GlanceWidget.updateWidget(applicationContext)
@@ -654,19 +611,9 @@ private fun WidgetPermissions(context: Context) {
 
 @Composable
 private fun WidgetText(
-    context: Context, enabled: Boolean,
-    showText: Boolean, onClick: (Boolean) -> Unit
+    context: Context, showText: Boolean,
+    onClick: (Boolean) -> Unit
 ) {
-    if (!enabled) {
-        Row(modifier = Modifier.fillMaxWidth())
-        {
-            Text(
-                text = stringResource(R.string.no_widgets_notice),
-                modifier = Modifier.padding(10.dp)
-            )
-        }
-    }
-
     // Toggle description of text on widget
     OptionSwitchRow(
         tooltip = stringResource(R.string.mode_desc_tooltip),
@@ -677,7 +624,6 @@ private fun WidgetText(
         },
         isChecked = showText,
         onClick = onClick,
-        modifier = Modifier.alpha(if (enabled) 1.0f else 0.5f)
     )
 }
 
@@ -725,7 +671,7 @@ fun SampleIcon(
 
 @SuppressLint("RestrictedApi")
 @Composable
-private fun WidgetColorAndSize(context: Context, enabled: Boolean, showText: Boolean) {
+private fun WidgetColorAndSize(context: Context, showText: Boolean) {
     val storage = Storage(context)
 
     // This seems like a kludge; it forces HexColorPicker and BrightnessSlider to reposition the wheel
@@ -745,11 +691,10 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean, showText: Boo
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(0.6f)
-            .alpha(if (enabled) 1.0f else 0.5f)
     )
     {
         val controller = rememberColorPickerController()
-        controller.enabled = enabled
+        controller.enabled = true
 
         Column {
             key(recomposeColorPicker) {
@@ -762,12 +707,10 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean, showText: Boo
                     initialColor = Color(initialColor),
                     controller = controller,
                     onColorChanged = {
-                        if (enabled) {
-                            if (selectedIndex == 0) {
-                                bgColor = it.color.toArgb()
-                            } else {
-                                fgColor = it.color.toArgb() and 0xffffff
-                            }
+                        if (selectedIndex == 0) {
+                            bgColor = it.color.toArgb()
+                        } else {
+                            fgColor = it.color.toArgb() and 0xffffff
                         }
                     }
                 )
@@ -790,8 +733,7 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean, showText: Boo
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .alpha(if (enabled) 1.0f else 0.5f),
+            .padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.Center
     )
     {
@@ -808,14 +750,12 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean, showText: Boo
             RadioButton(
                 selected = (buttonName == selectedOption),
                 onClick = {
-                    if (enabled) {
-                        selectedOption = buttonName
-                        val index = radioOptions.indexOf(selectedOption)
-                        selectedIndex = index
-                        initialColor =
-                            (if (selectedIndex == 0) bgColor else fgColor) and 0xffffff
-                        recomposeColorPicker = !recomposeColorPicker
-                    }
+                    selectedOption = buttonName
+                    val index = radioOptions.indexOf(selectedOption)
+                    selectedIndex = index
+                    initialColor =
+                        (if (selectedIndex == 0) bgColor else fgColor) and 0xffffff
+                    recomposeColorPicker = !recomposeColorPicker
                 },
                 modifier = Modifier
                     .fillMaxHeight(0.2f)
@@ -833,8 +773,7 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean, showText: Boo
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .alpha(if (enabled) 1.0f else 0.5f),
+            .padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     )
@@ -851,9 +790,7 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean, showText: Boo
             valueRange = 0.75f..1.0f,
             steps = 10,
             onValueChange = {
-                if (enabled) {
-                    widgetScale = it
-                }
+                widgetScale = it
             },
             modifier = Modifier
                 .fillMaxHeight(0.1f)
@@ -863,25 +800,22 @@ private fun WidgetColorAndSize(context: Context, enabled: Boolean, showText: Boo
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .alpha(if (enabled) 1.0f else 0.5f),
+            .padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.Center
     ) {
 
         // "Save" button
         Button(
             onClick = {
-                if (enabled) {
-                    // Store the new widget information
-                    storage.foregroundColor = fgColor
-                    storage.backgroundColor = bgColor
-                    storage.widgetScale = widgetScale
-                    GlanceWidget.updateWidget(context)
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.changes_saved), Toast.LENGTH_SHORT
-                    ).show()
-                }
+                // Store the new widget information
+                storage.foregroundColor = fgColor
+                storage.backgroundColor = bgColor
+                storage.widgetScale = widgetScale
+                GlanceWidget.updateWidget(context)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.changes_saved), Toast.LENGTH_SHORT
+                ).show()
             },
             colors = buttonColors,
             shape = RoundedCornerShape(10.dp),
@@ -956,11 +890,8 @@ private fun DescAndControl(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
+fun MainApplication(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val viewModel = viewModel { model }
-    val widgetStatus by viewModel.status.observeAsState()
-    val enabled = widgetStatus as Boolean
 
     val storage = Storage(context)
     val config = LocalConfiguration.current
@@ -1011,14 +942,14 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                     modifier = Modifier
                 ) {
                     WidgetText(
-                        context, enabled, showText,
+                        context, showText,
                         onClick = { value ->
                             showText = value
                             storage.textDescription = value
                             GlanceWidget.updateWidget(context)
                         }
                     )
-                    WidgetColorAndSize(context, enabled, showText)
+                    WidgetColorAndSize(context, showText)
                 }
             }
         }
@@ -1043,7 +974,7 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 // Display settings information
                 if (!showSettings) {
                     WidgetText(
-                        context, enabled, showText,
+                        context, showText,
                         onClick = { value ->
                             showText = value
                             storage.textDescription = value
@@ -1061,7 +992,7 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
                 if (showSettings) {
                     WidgetPermissions(context)
                 } else {
-                    WidgetColorAndSize(context, enabled, showText)
+                    WidgetColorAndSize(context, showText)
                 }
             }
         }
@@ -1073,6 +1004,6 @@ fun MainApplication(modifier: Modifier = Modifier, model: WidgetViewModel) {
 @Composable
 fun GreetingPreview() {
     RingControlTheme {
-        MainApplication(model = WidgetViewModel())
+        MainApplication()
     }
 }
