@@ -62,7 +62,6 @@ android {
 dependencies {
 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -72,7 +71,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.compose.colorpicker)
     implementation(libs.compose.colorpicker)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.work.runtime.ktx)
