@@ -2,6 +2,7 @@
   <dictionary name="project">
     <words>
       <w>logtag</w>
+      <w>ringcontrol</w>
     </words>
   </dictionary>
 </component>

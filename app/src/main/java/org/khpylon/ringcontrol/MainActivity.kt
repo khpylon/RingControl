@@ -58,6 +58,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
@@ -383,9 +384,7 @@ private fun checkLogcat(context: Context): String? {
             )
             val outputFilename = writeExternalFile(
                 context,
-                inStream,
-                "ringcontrol_logcat-",
-                "text/plain"
+                inStream
             )
 
             // Clear the crash log.
@@ -402,10 +401,11 @@ private fun checkLogcat(context: Context): String? {
 
 private fun writeExternalFile(
     context: Context,
-    inStream: InputStream,
-    baseFilename: String,
-    mimeType: String?
+    inStream: InputStream
 ): String {
+    val baseFilename ="ringcontrol_logcat-"
+    val mimeType = "text/plain"
+
     val time = LocalDateTime.now(ZoneId.systemDefault())
     val outputFilename =
         baseFilename + time.format(DateTimeFormatter.ofPattern("MM-dd-HH:mm:ss", Locale.US))
@@ -467,7 +467,7 @@ private fun OptionSwitchRow(
     )
     {
         TooltipBox(
-            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
             tooltip =
                 {
                     PlainTooltip {
