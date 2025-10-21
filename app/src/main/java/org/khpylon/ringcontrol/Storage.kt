@@ -11,7 +11,6 @@ object StorageConstants {
     const val RING_MODE = "ringMode"
     const val BG_COLOR = "bgColor"
     const val FG_COLOR = "fgColor"
-    const val TEXT_VISIBLE = "textVisible"
     const val TEXT_DESCRIPTION = "textDescription"
     const val WIDGET_SCALE = "widgetScale"
     const val NEW_INSTALL = "newInstall"
@@ -64,17 +63,6 @@ class Storage(private val context: Context) {
         set(color) {
             val edit = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE).edit()
             edit.putInt(StorageConstants.FG_COLOR, color or (0xff shl 24))
-            commitWait(edit)
-        }
-
-    var textVisible: Boolean
-        get() {
-            val pref = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE)
-            return pref.getBoolean(StorageConstants.TEXT_VISIBLE, true)
-        }
-        set(visibility) {
-            val edit = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE).edit()
-            edit.putBoolean(StorageConstants.TEXT_VISIBLE, visibility)
             commitWait(edit)
         }
 
