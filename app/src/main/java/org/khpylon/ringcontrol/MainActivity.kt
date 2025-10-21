@@ -513,7 +513,7 @@ private fun WidgetPermissions(context: Context) {
             batteryOptimized = pm.isIgnoringBatteryOptimizations(packageName)
         }
 
-    var calPermission by remember {
+    var calendarPermission by remember {
         mutableStateOf(storage.isCalendarEnabled)
     }
 
@@ -523,7 +523,21 @@ private fun WidgetPermissions(context: Context) {
             storage.isCalendarEnabled = context.checkSelfPermission(
                 Manifest.permission.READ_CALENDAR
             ) == PackageManager.PERMISSION_GRANTED
-            calPermission = storage.isCalendarEnabled
+            calendarPermission = storage.isCalendarEnabled
+        }
+
+    var notificationPermission by remember {
+        mutableStateOf(storage.isNotificationEnabled)
+    }
+
+    val notificationLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())
+        {
+            storage.isNotificationEnabled = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                    || context.checkSelfPermission(
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            calendarPermission = storage.isNotificationEnabled
         }
 
     Row(
@@ -583,22 +597,63 @@ private fun WidgetPermissions(context: Context) {
             withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                 append(context.getString(R.string.use_calendar_events))
             }
+            append(": ")
+            withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
+                append(context.getString(if (calendarPermission) R.string.enabled_description else R.string.disabled_description))
+            }
+
         },
-        isChecked = calPermission,
+        isChecked = calendarPermission,
         onClick = { value ->
             if (value) {
                 if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
                     storage.isCalendarEnabled = true
-                    calPermission = true
+                    calendarPermission = true
                 } else {
                     calLauncher.launch(Manifest.permission.READ_CALENDAR)
                 }
             } else {
                 storage.isCalendarEnabled = false
-                calPermission = false
+                calendarPermission = false
             }
         }
     )
+
+    // Enable/disable calendar event notifications
+    if (calendarPermission) {
+        OptionSwitchRow(
+            tooltip = stringResource(R.string.notification_tooltip),
+            desc = buildAnnotatedString {
+                withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                    append(stringResource(R.string.show_notifications_on_calendar_event))
+                }
+                append(": ")
+                withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
+                    append(context.getString(if (notificationPermission) R.string.enabled_description else R.string.disabled_description))
+                }
+            },
+            isChecked = notificationPermission,
+            onClick = { value ->
+                if (value) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                            storage.isNotificationEnabled = true
+                            notificationPermission = true
+                        } else {
+                            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    } else {
+                        storage.isNotificationEnabled = true
+                        notificationPermission = true
+                    }
+                } else {
+                    storage.isNotificationEnabled = false
+                    notificationPermission = false
+                }
+            }
+        )
+    }
+
 }
 
 @Composable

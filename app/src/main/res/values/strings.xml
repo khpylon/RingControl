@@ -39,7 +39,8 @@
     <string name="battery_tooltip">Unrestricted battery optimization is recommended so the
         widget will update when battery saving mode is enabled.</string>
     <string name="calendar_tooltip">Silence the ringer for specific events in your calendar. Just
-        add the text #RingControl# or #RC# in the event\'s title or description.
+        add the text #RingControl# or #RC# in the event\'s title or description
+        (to use vibration instead, use #RingControl/V# or #RC/V#).
         \n\nCalendar must be enabled in the app\'s permissions.</string>
     <string name="visible_desc_tooltip">Enable to display text below the widget.</string>
     <string name="mode_desc_tooltip">Enable to display the ring state in the text below the widget.</string>
@@ -54,8 +55,8 @@
         widget will show which mode is active (normal, vibrate, or silent).</string>
     <string name="using_calendar_title">Controlling the ring state with calendar events</string>
     <string name="using_calendar_part1">If you want your phone to enter Do Not Disturb mode during an
-        event in your Google calendar, add either #RC# or #RingControl# to the event\'s title or
-        description (to set the phone to vibrate instead, use #RC/V# or #RingControl/V#).
+        event in your Google calendar, add either #RingControl# or #RC# to the event\'s title or
+        description (to use vibration instead, use #RingControl/V# or #RC/V#).
         You should do this at least one hour prior to the event\'s start. The mode will
         change approximately one minute prior to the event\'s start, and revert back to the original
         setting after the event. Events must be less than 24 hours, and cannot be all-day.</string>
@@ -73,4 +74,11 @@
     <string name="app_usage_menu">App Usage</string>
     <string name="release_notes_menu">Release Notes</string>
     <string name="about_menu">About</string>
+    <string name="channel_description">General information from the app</string>
+    <string name="channel_name">Informational</string>
+    <string name="notification_tooltip">Show a notification when the app turns off the ringer.
+        \n\nNotifications must be enabled in the app\'s permissions.</string>
+    <string name="show_notifications_on_calendar_event">Calendar event notifications</string>
+    <string name ="enabled_description">Enabled</string>
+    <string name ="disabled_description">Disabled</string>
 </resources>

@@ -18,10 +18,10 @@ object StorageConstants {
     const val APP_STATE: String = "app_state"
     const val RING_STATUS: String = "ring_status"
     const val CALENDAR_STATUS: String = "calendar_status"
+    const val NOTIFICATION_STATUS: String = "notification_status"
     const val INACTIVE: Int = 0
     const val SILENT: Int = 1
     const val VIBRATE: Int = 2
-
 }
 
 class Storage(private val context: Context) {
@@ -176,6 +176,26 @@ class Storage(private val context: Context) {
             val edit = pref.edit()
             // Store data. you may also use putFloat(), putInt(), putLong() as requirement
             edit.putBoolean(StorageConstants.CALENDAR_STATUS, value)
+            // Commit the changes
+            commitWait(edit)
+        }
+
+    var isNotificationEnabled: Boolean
+        get() {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            return pref.getBoolean(StorageConstants.NOTIFICATION_STATUS, false)
+        }
+        set(value) {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            val edit = pref.edit()
+            // Store data. you may also use putFloat(), putInt(), putLong() as requirement
+            edit.putBoolean(StorageConstants.NOTIFICATION_STATUS, value)
             // Commit the changes
             commitWait(edit)
         }
