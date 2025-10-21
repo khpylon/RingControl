@@ -4,10 +4,7 @@
     <string name="app_explanation">This application allows your phone\'s ring mode to be
         changed using a widget, and optionally by specific events in your calendars.
         For more explanation, see the three-dot menu.</string>
-    <string name="dnd_permissions">\"Modes access\" permission:</string>
-    <string name="dnd_enabled">Enabled</string>
-    <string name="dnd_disabled">Disabled</string>
-    <string name="widget_needs_dnd_permissions">This widget requires \"Modes access\" to be enabled.</string>
+    <string name="dnd_permissions">\"Modes access\" permission</string>
     <string name="ringer">Ringer</string>
     <string name="background_string">Background color</string>
     <string name="foreground_string">Icon color</string>
@@ -17,20 +14,15 @@
     <string name="ringer_description">Ringer</string>
     <string name="changes_saved">Widget changes saved.</string>
     <string name="logcat_crashfile_formatstring">Logcat crash file \"{0}.txt\" copied to Download folder.</string>
-    <string name="ring_control_notifications_channel">Ring Control notifications channel</string>
-    <string name="ring_control_channel">Ring Control channel</string>
-    <string name="ring_control_notification_title">Ring Control</string>
-    <string name="ring_control_notification_text">This service detects external changes to the ring settings.</string>
     <string name="whats_new">"What's new in "</string>
-    <string name="dismiss_button">Dismiss</string>
     <string name="visible_description">Visible description</string>
     <string name="enable_mode_description">Enable mode description</string>
     <string name="widget_size">Widget size</string>
     <string name="save_button">Save</string>
     <string name="reset_button">Reset</string>
-    <string name="app_version">"App version "</string>
+    <string name="dismiss_button">Dismiss</string>
     <string name="sample_mode_label">Label</string>
-    <string name="battery_opt">Battery optimization:</string>
+    <string name="battery_opt">Battery optimization</string>
     <string name="battery_opts_off_description">Unrestricted (recommended)</string>
     <string name="battery_opts_on_description">Optimized (may cause issues)</string>
     <string name="use_calendar_events">Use calendar events</string>
@@ -42,6 +34,11 @@
         add the text #RingControl# or #RC# in the event\'s title or description
         (to use vibration instead, use #RingControl/V# or #RC/V#).
         \n\nCalendar must be enabled in the app\'s permissions.</string>
+    <string name="notification_tooltip">Show a notification when the app turns off the ringer.
+        \n\nNotifications must be enabled in the app\'s permissions.</string>
+    <string name="show_notifications_on_calendar_event">Calendar event notifications</string>
+    <string name ="enabled_description">Enabled</string>
+    <string name ="disabled_description">Disabled</string>
     <string name="visible_desc_tooltip">Enable to display text below the widget.</string>
     <string name="mode_desc_tooltip">Enable to display the ring state in the text below the widget.</string>
     <string name="permission_settings">Switch to permission settings.</string>
@@ -61,7 +58,7 @@
         change approximately one minute prior to the event\'s start, and revert back to the original
         setting after the event. Events must be less than 24 hours, and cannot be all-day.</string>
     <string name="using_calendar_part2">Remember, you need to give the app permission to read your
-        calendar. If you didn\'t do this when you first ran the app, do the following: go to
+        calendar. If you did not do this when you first ran the app, do the following: go to
         Settings, go to Apps, find the Ring Control App, and under Permissions set Calendar to
         allowed.</string>
     <string name="about_the_app_title">About The App</string>
@@ -76,9 +73,5 @@
     <string name="about_menu">About</string>
     <string name="channel_description">General information from the app</string>
     <string name="channel_name">Informational</string>
-    <string name="notification_tooltip">Show a notification when the app turns off the ringer.
-        \n\nNotifications must be enabled in the app\'s permissions.</string>
-    <string name="show_notifications_on_calendar_event">Calendar event notifications</string>
-    <string name ="enabled_description">Enabled</string>
-    <string name ="disabled_description">Disabled</string>
+    <string name="app_version">"App version "</string>
 </resources>

@@ -559,9 +559,9 @@ private fun WidgetPermissions(context: Context) {
             withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                 append(context.getString(R.string.dnd_permissions))
             }
-            append("\n  ")
+            append(":\n  ")
             withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                append(context.getString(if (modesAccessPermission) R.string.dnd_enabled else R.string.dnd_disabled))
+                append(context.getString(if (modesAccessPermission) R.string.enabled_description else R.string.disabled_description))
             }
         },
         isChecked = modesAccessPermission,
@@ -578,7 +578,7 @@ private fun WidgetPermissions(context: Context) {
             withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                 append(context.getString(R.string.battery_opt))
             }
-            append("\n  ")
+            append(":\n  ")
             withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
                 append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description))
             }
@@ -597,7 +597,7 @@ private fun WidgetPermissions(context: Context) {
             withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                 append(context.getString(R.string.use_calendar_events))
             }
-            append(": ")
+            append(":\n  ")
             withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
                 append(context.getString(if (calendarPermission) R.string.enabled_description else R.string.disabled_description))
             }
@@ -627,7 +627,7 @@ private fun WidgetPermissions(context: Context) {
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                     append(stringResource(R.string.show_notifications_on_calendar_event))
                 }
-                append(": ")
+                append(":\n  ")
                 withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
                     append(context.getString(if (notificationPermission) R.string.enabled_description else R.string.disabled_description))
                 }
