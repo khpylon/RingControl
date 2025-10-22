@@ -2,8 +2,8 @@
     <string name="app_name">Ring Control</string>
     <string name="app_widget_description">Ring Control</string>
     <string name="app_explanation">This application allows your phone\'s ring mode to be
-        changed using a widget, and optionally by specific events in your calendars.
-        For more explanation, see the three-dot menu.</string>
+        changed using a widget or by events in your calendars.
+        For more info, see the three-dot menu.</string>
     <string name="dnd_permissions">\"Modes access\" permission</string>
     <string name="ringer">Ringer</string>
     <string name="background_string">Background color</string>
