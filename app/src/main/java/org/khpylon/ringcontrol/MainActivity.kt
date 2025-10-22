@@ -113,16 +113,16 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-class MainActivity : ComponentActivity() {
-
-    // Thanks to https://stackoverflow.com/questions/67768746
-    inline fun Modifier.applyIf(condition : Boolean, modifier : Modifier.() -> Modifier) : Modifier {
-        return if (condition) {
-            then(modifier(Modifier))
-        } else {
-            this
-        }
+// Thanks to https://stackoverflow.com/questions/67768746
+private inline fun Modifier.applyIf(condition : Boolean, modifier : Modifier.() -> Modifier) : Modifier {
+    return if (condition) {
+        then(modifier(Modifier))
+    } else {
+        this
     }
+}
+
+class MainActivity : ComponentActivity() {
 
     @SuppressLint("NewApi")
     @OptIn(ExperimentalMaterial3Api::class)
