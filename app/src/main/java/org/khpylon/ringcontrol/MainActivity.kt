@@ -115,6 +115,15 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
+    // Thanks to https://stackoverflow.com/questions/67768746
+    inline fun Modifier.applyIf(condition : Boolean, modifier : Modifier.() -> Modifier) : Modifier {
+        return if (condition) {
+            then(modifier(Modifier))
+        } else {
+            this
+        }
+    }
+
     @SuppressLint("NewApi")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -707,8 +716,11 @@ fun SampleIcon(
                 bitmap = bitmap.asImageBitmap(),
                 modifier = Modifier
                     .padding((5f * scale).dp)
-                    .height((100f * scale).dp)
-                    .width((100f * scale).dp),
+                    // Example for future use?
+                    .applyIf(scale > 0.0f) {
+                        height((100f * scale).dp)
+                        .width((100f * scale).dp)
+                    },
                 contentDescription = "",
             )
         }
