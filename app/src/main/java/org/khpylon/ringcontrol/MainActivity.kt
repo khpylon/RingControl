@@ -174,8 +174,6 @@ class MainActivity : ComponentActivity() {
             RingControlTheme {
 
                 // Create variables to store display state
-                var displayMenu by remember { mutableStateOf(false) }
-
                 var displayInstructions by remember { mutableStateOf(false) }
                 var displayWhatsNew by remember { mutableStateOf(storage.newInstall) }
                 var displayAppInfo by remember { mutableStateOf(false) }
@@ -186,159 +184,184 @@ class MainActivity : ComponentActivity() {
                             title = { Text(context.getString(R.string.app_name)) },
                             actions = {
 
-                                // Creating Icon button for dropdown menu
-                                IconButton(onClick = { displayMenu = !displayMenu }) {
-                                    Icon(Icons.Default.MoreVert, "")
-                                }
-
-                                // Create a dropdown menu
-                                DropdownMenu(
-                                    expanded = displayMenu,
-                                    onDismissRequest = { displayMenu = false },
-                                ) {
-                                    // Add in each menu item
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            displayMenu = false
-                                            displayInstructions = true
-                                        },
-                                        text = { Text(text = stringResource(R.string.app_usage_menu)) }
-                                    )
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            displayMenu = false
-                                            displayWhatsNew = true
-                                        },
-                                        text = { Text(text = stringResource(R.string.release_notes_menu)) }
-                                    )
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            displayMenu = false
-                                            displayAppInfo = true
-                                        },
-                                        text = { Text(text = stringResource(R.string.about_menu)) }
-                                    )
-                                }
-
-                                // If the app has been updated, display a dialog explaining changes
-                                if (displayWhatsNew) {
-                                    storage.newInstall = false
-                                    val description = readChangeFile(context)
-
-                                    // Create a bullet list from each line of text.  Props to
-                                    // https://stackoverflow.com/questions/70724196 for the hint.
-                                    val bulletString = "\u2022\t"
-                                    val textStyle = LocalTextStyle.current
-                                    val textMeasurer = rememberTextMeasurer()
-                                    val bulletStringWidth = remember(textStyle, textMeasurer) {
-                                        textMeasurer.measure(
-                                            text = bulletString,
-                                            style = textStyle
-                                        ).size.width
+                                // Draw the menus and get the selected result
+                                AppMenu(
+                                    context
+                                ) { value ->
+                                    when (value) {
+                                        context.getString(R.string.app_usage_menu) -> displayInstructions = true
+                                        context.getString(R.string.release_notes_menu) -> displayWhatsNew = true
+                                        context.getString(R.string.about_menu) -> displayAppInfo = true
                                     }
-                                    val restLine =
-                                        with(LocalDensity.current) { bulletStringWidth.toSp() }
-                                    val paragraphStyle =
-                                        ParagraphStyle(textIndent = TextIndent(restLine = restLine))
-                                    val message = buildAnnotatedString {
-                                        description.forEach { text ->
-                                            withStyle(style = paragraphStyle) {
-                                                append(bulletString)
-                                                append(text)
-                                            }
-                                        }
-                                    }
-
-                                    InfoDialog(
-                                        onDismissRequest = { displayWhatsNew = false },
-                                        dialogTitle = stringResource(R.string.whats_new) + BuildConfig.VERSION_NAME,
-                                        dialogText = message
-                                    )
-                                }
-
-                                // Display information about the app itself
-                                if (displayAppInfo) {
-                                    InfoDialog(
-                                        onDismissRequest = { displayAppInfo = false },
-                                        dialogTitle = stringResource(R.string.about_the_app_title),
-                                        dialogText =
-                                            buildAnnotatedString {
-                                                append(context.getString(R.string.app_version))
-                                                append(": ")
-                                                append(BuildConfig.VERSION_NAME)
-                                                append("\n\n")
-                                                append(stringResource(R.string.about_more_info))
-                                            }
-                                    )
-                                }
-
-                                // Display instructions for using the app
-                                if (displayInstructions) {
-                                    InfoDialog(
-                                        onDismissRequest = { displayInstructions = false },
-                                        dialogTitle = stringResource(R.string.app_usage_title),
-                                        dialogText =
-                                            buildAnnotatedString {
-
-                                                // How to use the widget
-                                                withStyle(
-                                                    style = SpanStyle(
-                                                        fontSize = TextUnit(16f, TextUnitType.Sp),
-                                                        fontWeight = FontWeight.Bold
-                                                    )
-                                                ) {
-                                                    append(stringResource(R.string.using_the_widget_title))
-                                                }
-                                                append("\n\n")
-                                                append(stringResource(R.string.using_the_widget_instructions_part1))
-                                                append("\"")
-                                                append(stringResource(R.string.permission_settings))
-                                                append("\".) ")
-                                                append(stringResource(R.string.using_the_widget_instructions_part2))
-
-                                                // How to use the calendar with the widget
-                                                append("\n\n")
-                                                withStyle(
-                                                    style = SpanStyle(
-                                                        fontSize = TextUnit(16f, TextUnitType.Sp),
-                                                        fontWeight = FontWeight.Bold
-                                                    )
-                                                ) {
-                                                    append(stringResource(R.string.using_calendar_title))
-                                                }
-                                                append("\n\n")
-                                                append(stringResource(R.string.using_calendar_part1))
-                                                append("\n\n")
-                                                append(stringResource(R.string.using_calendar_part2))
-
-                                                // How to find out more about the app
-                                                append("\n\n")
-                                                withStyle(
-                                                    style = SpanStyle(
-                                                        fontSize = TextUnit(16f, TextUnitType.Sp),
-                                                        fontWeight = FontWeight.Bold
-                                                    )
-                                                ) {
-                                                    append(stringResource(R.string.more_info_title))
-                                                }
-                                                append("\n\n")
-                                                append(stringResource(R.string.more_info_part1))
-
-                                            }
-                                    )
                                 }
                             }
                         )
                     }, modifier = Modifier.fillMaxSize()
                 )
                 { innerPadding ->
+                    // If the app has been updated, display a dialog explaining changes
+                    if (displayWhatsNew) {
+                        storage.newInstall = false
+                        val description = readChangeFile(context)
+
+                        // Create a bullet list from each line of text.  Props to
+                        // https://stackoverflow.com/questions/70724196 for the hint.
+                        val bulletString = "\u2022\t"
+                        val textStyle = LocalTextStyle.current
+                        val textMeasurer = rememberTextMeasurer()
+                        val bulletStringWidth = remember(textStyle, textMeasurer) {
+                            textMeasurer.measure(
+                                text = bulletString,
+                                style = textStyle
+                            ).size.width
+                        }
+                        val restLine =
+                            with(LocalDensity.current) { bulletStringWidth.toSp() }
+                        val paragraphStyle =
+                            ParagraphStyle(textIndent = TextIndent(restLine = restLine))
+                        val message = buildAnnotatedString {
+                            description.forEach { text ->
+                                withStyle(style = paragraphStyle) {
+                                    append(bulletString)
+                                    append(text)
+                                }
+                            }
+                        }
+
+                        InfoDialog(
+                            onDismissRequest = { displayWhatsNew = false },
+                            dialogTitle = stringResource(R.string.whats_new) + BuildConfig.VERSION_NAME,
+                            dialogText = message
+                        )
+                    }
+
+                    // Display information about the app itself
+                    if (displayAppInfo) {
+                        InfoDialog(
+                            onDismissRequest = { displayAppInfo = false },
+                            dialogTitle = stringResource(R.string.about_the_app_title),
+                            dialogText =
+                                buildAnnotatedString {
+                                    append(context.getString(R.string.app_version))
+                                    append(": ")
+                                    append(BuildConfig.VERSION_NAME)
+                                    append("\n\n")
+                                    append(stringResource(R.string.about_more_info))
+                                }
+                        )
+                    }
+
+                    // Display instructions for using the app
+                    if (displayInstructions) {
+                        InfoDialog(
+                            onDismissRequest = { displayInstructions = false },
+                            dialogTitle = stringResource(R.string.app_usage_title),
+                            dialogText =
+                                buildAnnotatedString {
+
+                                    // How to use the widget
+                                    withStyle(
+                                        style = SpanStyle(
+                                            fontSize = TextUnit(16f, TextUnitType.Sp),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    ) {
+                                        append(stringResource(R.string.using_the_widget_title))
+                                    }
+                                    append("\n\n")
+                                    append(stringResource(R.string.using_the_widget_instructions_part1))
+                                    append("\"")
+                                    append(stringResource(R.string.permission_settings))
+                                    append("\".) ")
+                                    append(stringResource(R.string.using_the_widget_instructions_part2))
+
+                                    // How to use the calendar with the widget
+                                    append("\n\n")
+                                    withStyle(
+                                        style = SpanStyle(
+                                            fontSize = TextUnit(16f, TextUnitType.Sp),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    ) {
+                                        append(stringResource(R.string.using_calendar_title))
+                                    }
+                                    append("\n\n")
+                                    append(stringResource(R.string.using_calendar_part1))
+                                    append("\n\n")
+                                    append(stringResource(R.string.using_calendar_part2))
+
+                                    // How to find out more about the app
+                                    append("\n\n")
+                                    withStyle(
+                                        style = SpanStyle(
+                                            fontSize = TextUnit(16f, TextUnitType.Sp),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    ) {
+                                        append(stringResource(R.string.more_info_title))
+                                    }
+                                    append("\n\n")
+                                    append(stringResource(R.string.more_info_part1))
+
+                                }
+                        )
+                    }
                     MainApplication(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+//                        onMenuClick = { value ->
+//                            when (value) {
+//                                context.getString(R.string.app_usage_menu) -> displayInstructions = true
+//                                context.getString(R.string.release_notes_menu) -> displayWhatsNew = true
+//                                context.getString(R.string.about_menu) -> displayAppInfo = true
+//                            }
+//                        }
                     )
                 }
                 GlanceWidget.updateWidget(applicationContext)
             }
         }
+    }
+}
+
+@Composable
+fun AppMenu(
+    context: Context,
+    onClick: (String) -> Unit
+) {
+    var displayMenu by remember { mutableStateOf(false) }
+
+    // Creating Icon button for dropdown menu
+    IconButton(onClick = { displayMenu = !displayMenu }) {
+        Icon(Icons.Default.MoreVert, "")
+    }
+
+    // Create a dropdown menu
+    DropdownMenu(
+        expanded = displayMenu,
+        onDismissRequest = { displayMenu = false },
+    ) {
+        // Add in each menu item
+        DropdownMenuItem(
+            onClick = {
+                displayMenu = false
+                onClick(context.getString(R.string.app_usage_menu))
+            },
+            text = { Text(text = stringResource(R.string.app_usage_menu)) }
+        )
+        DropdownMenuItem(
+            onClick = {
+                displayMenu = false
+                onClick(context.getString(R.string.release_notes_menu))
+            },
+            text = { Text(text = stringResource(R.string.release_notes_menu)) }
+        )
+        DropdownMenuItem(
+            onClick = {
+                displayMenu = false
+                onClick(context.getString(R.string.about_menu))
+            },
+            text = { Text(text = stringResource(R.string.about_menu)) }
+        )
     }
 }
 
@@ -949,7 +972,10 @@ private fun DescAndControl(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainApplication(modifier: Modifier = Modifier) {
+fun MainApplication(
+    modifier: Modifier = Modifier,
+//    onMenuClick: (String) -> Unit = {}
+) {
     val context = LocalContext.current
 
     val storage = Storage(context)
@@ -982,6 +1008,18 @@ fun MainApplication(modifier: Modifier = Modifier) {
             modifier = modifier
                 .padding(horizontal = 10.dp) // add some space on left and right
         ) {
+//            ///
+//            TopAppBar(
+//                title = { Text(context.getString(R.string.app_name)) },
+//                actions = {
+//
+//                    // Draw the menus and get the selected result
+//                    AppMenu(
+//                        context
+//                    ) { value -> onMenuClick(value) }
+//                }
+//            )
+//            ///
 
             DescAndControl(
                 showSettings,
