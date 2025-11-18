@@ -121,8 +121,9 @@ class GlanceWidget : GlanceAppWidget() {
             // If descriptions are enabled, add the text
             textDescription?.let {
 
-                // Clear the canvas to start over
-                auxBgCanvas.drawColor(Color.Transparent.toArgb())
+                // Create bitmap and canvas for text
+                val textBmp = createBitmap(size.width.value.toInt(), size.height.value.toInt())
+                val textCanvas = Canvas(textBmp)
 
                 // Set text attributes
                 paint.setColor(Color.White.toArgb())
@@ -131,14 +132,14 @@ class GlanceWidget : GlanceAppWidget() {
                 paint.textAlign = Paint.Align.CENTER
 
                 // Draw text at bottom of canvas
-                auxBgCanvas.drawText(
+                textCanvas.drawText(
                     textDescription,
                     auxBgCanvas.width / 2f, auxBgCanvas.height * 1.0f, paint
                 )
 
                 // Merge in the text
                 paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
-                fgCanvas.drawBitmap(auxBgBmp, 0f, 0f, paint)
+                fgCanvas.drawBitmap(textBmp, 0f, 0f, paint)
             }
             return fgBmp
         }
@@ -179,7 +180,7 @@ class GlanceWidget : GlanceAppWidget() {
                     AudioManager.RINGER_MODE_SILENT -> context.getString(R.string.silent_description)
                     else -> context.getString(R.string.vibrate_description)
                 }
-            } else ""
+            } else null
 
             // Assemble the icon
             val drawable = AppCompatResources.getDrawable(context, icon) as Drawable
