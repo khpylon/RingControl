@@ -1,2 +1,1 @@
-Allow calendar entries to also set the ring mode to vibrate.
-Allow calendar entries to show a notification when the ring mode is changed.
+Make it optional for calendar entries to show a notification when the ring mode is changed (use #RingControl/N# or #RC/N).

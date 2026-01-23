@@ -17,31 +17,60 @@ import java.util.Date
 import androidx.core.net.toUri
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import java.util.regex.Pattern
 import kotlin.collections.isNotEmpty
 
 private const val NO_ANNOTATION = 0
 private const val DND_ANNOTATION = 1
 private const val VIBRATE_ANNOTATION = 2
+private const val NOTIFY_ANNOTATION = 3
+private const val VIBRATE_NOTIFY_ANNOTATION = 4
 
 class ReadCalendars // Store context used locally.
 internal constructor(private val mContext: Context) {
 
     private fun checkForAnnotations(string: String): Int {
-        val lowercaseString = string.lowercase()
 
-        return if (lowercaseString.contains("#ringcontrol/v#") ||
-            lowercaseString.contains("#ring control/v#") ||
-            lowercaseString.contains("#rc/v#")
-        ) {
-            VIBRATE_ANNOTATION
-        } else if (lowercaseString.contains("#ringcontrol#") ||
-            lowercaseString.contains("#ring control#") ||
-            lowercaseString.contains("#rc#")
-        ) {
-            DND_ANNOTATION
+        val pattern = Pattern.compile("#(rc|ring ?control)(/(v|n|nv|vn))*#", Pattern.CASE_INSENSITIVE)
+        val matcher = pattern.matcher(string )
+        return if (matcher.find()) {
+            val substring = matcher.group().lowercase()
+            return if (substring.contains("/nv#") || substring.contains("/vn#")) {
+                VIBRATE_NOTIFY_ANNOTATION
+            } else if (substring.contains("/v#")) {
+                VIBRATE_ANNOTATION
+            } else if (substring.contains("/n#")) {
+                NOTIFY_ANNOTATION
+            } else {
+                DND_ANNOTATION
+            }
         } else {
             NO_ANNOTATION
         }
+
+//        val lowercaseString = string.lowercase()
+//
+//        return if (lowercaseString.contains("#ringcontrol/v#") ||
+//            lowercaseString.contains("#ring control/v#") ||
+//            lowercaseString.contains("#rc/v#")
+//        ) {
+//            VIBRATE_ANNOTATION
+//        } else if (lowercaseString.contains("#ringcontrol#") ||
+//            lowercaseString.contains("#ring control#") ||
+//            lowercaseString.contains("#rc#")
+//        ) {
+//            DND_ANNOTATION
+//        } else {
+//            NO_ANNOTATION
+//        }
+    }
+
+    private fun isVibrate(annotation: Int): Boolean {
+        return (annotation == VIBRATE_ANNOTATION) || (annotation == VIBRATE_NOTIFY_ANNOTATION)
+    }
+
+    private fun isNotify(annotation: Int): Boolean {
+        return (annotation == NOTIFY_ANNOTATION) || (annotation == VIBRATE_NOTIFY_ANNOTATION)
     }
 
     // Find all calendar events within a certain interval.
@@ -104,15 +133,17 @@ internal constructor(private val mContext: Context) {
 
                     if (titleMatch != NO_ANNOTATION || descriptionMatch != NO_ANNOTATION) {
                         val endInMillis = end.toInstant().toEpochMilli()
-                        val isVibrate = titleMatch == VIBRATE_ANNOTATION
-                                || descriptionMatch == VIBRATE_ANNOTATION
+                        val isVibrate = isVibrate(titleMatch)
+                                || isVibrate(descriptionMatch)
+                        val isNotify = isNotify(titleMatch)
+                                || isNotify(descriptionMatch)
                         if (endInMillis > lastEndTime) {
                             lastEndTime = endInMillis
                             events.add(
                                 EventInfo(
                                     ZonedDateTime.ofInstant(begin.toInstant(), zoneId),
                                     ZonedDateTime.ofInstant(end.toInstant(), zoneId),
-                                    eventId, title, isVibrate
+                                    eventId, title, isVibrate, isNotify
                                 )
                             )
                             Log.e(Constants.LOGTAG, "Found event '$title' ($eventId)")

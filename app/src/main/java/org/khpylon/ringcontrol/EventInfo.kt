@@ -8,7 +8,8 @@ class EventInfo(
     val endTime: ZonedDateTime,
     id: Int,
     val title: String,
-    val isVibrate: Boolean
+    val isVibrate: Boolean,
+    val isNotify: Boolean,
 ) {
     val eventId: Long = id.toLong()
 

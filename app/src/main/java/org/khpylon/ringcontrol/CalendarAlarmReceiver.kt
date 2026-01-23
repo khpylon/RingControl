@@ -45,6 +45,7 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
         // If an event is active, or the user wants to see the app is active, display an notification
         if (storage.isNotificationEnabled && events.isNotEmpty()
             && events[0].isEventActive(time.atZone(ZoneId.systemDefault()))
+            && events[0].isNotify
         ) {
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
