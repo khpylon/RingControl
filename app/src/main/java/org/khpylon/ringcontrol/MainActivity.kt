@@ -276,19 +276,17 @@ class MainActivity : ComponentActivity() {
                                             {
 
                                                 // Event's title
-                                                Row() {
+                                                Row {
                                                     val title = item.title
                                                     Text(
-                                                        text = """$title""",
-                                                        modifier = Modifier
-                                                            .padding(horizontal = 8.dp),
-                                                        maxLines = 1,
+                                                        title, Modifier
+                                                            .padding(horizontal = 8.dp), maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis
                                                     )
                                                 }
 
                                                 // Event's time, and options if specified
-                                                Row() {
+                                                Row {
                                                     Spacer(
                                                         modifier = Modifier
                                                             .padding(horizontal = 8.dp)
@@ -324,7 +322,7 @@ class MainActivity : ComponentActivity() {
                                                         options += "+$offset"
                                                     }
                                                     // If anu options are present, surround with parenthesis
-                                                    if (options.length > 0) {
+                                                    if (options.isNotEmpty()) {
                                                         options = "($options)"
                                                     }
                                                     Text(
@@ -335,8 +333,7 @@ class MainActivity : ComponentActivity() {
 
                                                 // Make note of repeating options.
                                                 if (item.isRepeating) {
-                                                    val repeat = item.isRepeating
-                                                    Row() {
+                                                    Row {
                                                         Spacer(
                                                             modifier = Modifier
                                                                 .padding(horizontal = 8.dp)

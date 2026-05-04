@@ -12,7 +12,6 @@ import android.provider.CalendarContract
 import android.text.format.DateUtils
 import android.util.Log
 import androidx.core.net.toUri
-import com.google.ical.values.RRule
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
