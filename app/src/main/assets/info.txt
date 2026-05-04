@@ -1,1 +1,2 @@
-Make it optional for calendar entries to show a notification when the ring mode is changed (use #RingControl/N# or #RC/N).
+Make it optional for calendar entries to show a notification when the ring mode is changed (use #RingControl/N# or #RC/N#).
+Allow phone mode to be changed earlier before an event (use #RingControl/+X# or #RC/+X#).
