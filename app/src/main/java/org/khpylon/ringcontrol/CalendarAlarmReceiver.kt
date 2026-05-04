@@ -26,32 +26,27 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
         val storage = Storage(context)
         val time = LocalDateTime.now(ZoneId.systemDefault())
 
+        // Check to see if there are pending events
         val events = ReadCalendars(context).findEvents(time)
         val isCalendarEvent = !events.isEmpty()
 
+        // Determine when the next alarm should occur
         val next = if (!isCalendarEvent) {
             time.minusMinutes(INTERVAL)
         } else {
             events[0].alarmTime(time.atZone(ZoneId.systemDefault()))
         }
 
-//        val timeText = next.format(
-//            java.time.format.DateTimeFormatter.ofPattern(
-//                "MM/dd HH:mm:ss",
-//                java.util.Locale.US
-//            )
-//        )
-
+        // Format the time for the next alarm.
         val dateFormatter =
             DateTimeFormatter.ofLocalizedDate(
                 FormatStyle.SHORT
             ).withLocale(Locale.getDefault())
-        val dateText = next.format(dateFormatter)
+        val dateText = time.format(dateFormatter)
         val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
         val timeFormatter =
             DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "hh:mm a")
-        val timeText = next.format(timeFormatter)
-
+        val timeText = time.format(timeFormatter)
 
         Log.d(Constants.LOGTAG, "Next AlarmReceiver at $dateText $timeText")
         Log.d(Constants.LOGTAG, "isCalendarEvent is $isCalendarEvent")
