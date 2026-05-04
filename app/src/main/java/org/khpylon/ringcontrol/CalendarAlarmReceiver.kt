@@ -13,7 +13,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.getSystemService
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Date
+import java.util.Locale
 
 private const val INTERVAL = 20L  // if no events are found, check again in 20 minutes
 
@@ -27,19 +30,30 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
         val isCalendarEvent = !events.isEmpty()
 
         val next = if (!isCalendarEvent) {
-            time.plusMinutes(INTERVAL)
+            time.minusMinutes(INTERVAL)
         } else {
             events[0].alarmTime(time.atZone(ZoneId.systemDefault()))
         }
 
-        val timeText = next.format(
-            java.time.format.DateTimeFormatter.ofPattern(
-                "MM/dd HH:mm:ss",
-                java.util.Locale.US
-            )
-        )
+//        val timeText = next.format(
+//            java.time.format.DateTimeFormatter.ofPattern(
+//                "MM/dd HH:mm:ss",
+//                java.util.Locale.US
+//            )
+//        )
 
-        Log.d(Constants.LOGTAG, "Next AlarmReceiver at $timeText")
+        val dateFormatter =
+            DateTimeFormatter.ofLocalizedDate(
+                FormatStyle.SHORT
+            ).withLocale(Locale.getDefault())
+        val dateText = next.format(dateFormatter)
+        val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+        val timeFormatter =
+            DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "hh:mm a")
+        val timeText = next.format(timeFormatter)
+
+
+        Log.d(Constants.LOGTAG, "Next AlarmReceiver at $dateText $timeText")
         Log.d(Constants.LOGTAG, "isCalendarEvent is $isCalendarEvent")
 
         // If an event is active, or the user wants to see the app is active, display an notification
@@ -59,7 +73,7 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
             val builder = NotificationCompat.Builder(context, NORMAL_NOTIFICATIONS)
                 .setSmallIcon(R.drawable.notifier_recycler)
                 .setContentTitle("Ring Control")
-                .setContentText("Ringer disabled at $timeText for calendar event \"$title\"")
+                .setContentText("Ringer disabled at $dateText $timeText for calendar event \"$title\"")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             notificationManager.notify(7, builder.build())
         }

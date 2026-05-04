@@ -54,11 +54,14 @@
     <string name="using_calendar_part1">If you want your phone to enter Do Not Disturb mode during an
         event in your Google calendar, add either #RingControl# or #RC# to the event\'s title or
         description. To use vibration instead, use #RingControl/V# or #RC/V#.
-        To receive a notification when an event starts, use #RingControl/N# or #RC/N. (To do both,
-        use "/NV" or "/VN".)
-        You should do this at least one hour prior to the event\'s start. The mode will
-        change approximately one minute prior to the event\'s start, and revert back to the original
-        setting after the event. Events must be less than 24 hours, and cannot be all-day.</string>
+        To receive a notification when an event starts, use #RingControl/N# or #RC/N#.
+        To change the mode earlier prior to an event, use #RingControl/+X# or #RC/+X#
+        where "X" is the number of minutes (up to 15 minutes).  Options can be combined.
+        Options should be entered at least one hour prior to the event\'s start.
+        The mode will change approximately one minute prior to the event\'s start
+        (or by the amount specified in the "/+X" option), and revert back to the original
+        setting after the event. Events must be less than 24 hours, and cannot be all-day.
+    </string>
     <string name="using_calendar_part2">Remember, you need to give the app permission to read your
         calendar. If you did not do this when you first ran the app, do the following: go to
         Settings, go to Apps, find the Ring Control App, and under Permissions set Calendar to
@@ -76,4 +79,7 @@
     <string name="channel_description">General information from the app</string>
     <string name="channel_name">Informational</string>
     <string name="app_version">"App version "</string>
+    <string name="events_in_next_two_weeks">Events in next two weeks:</string>
+    <string name="list_events">List Events</string>
+    <string name="event_repeats">This event repeats.</string>
 </resources>

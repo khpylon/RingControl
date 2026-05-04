@@ -24,9 +24,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -36,6 +38,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -56,6 +60,7 @@ import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
@@ -75,6 +80,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
@@ -89,12 +95,14 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextIndent
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
@@ -111,10 +119,14 @@ import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Locale
 
 // Thanks to https://stackoverflow.com/questions/67768746
-private inline fun Modifier.applyIf(condition : Boolean, modifier : Modifier.() -> Modifier) : Modifier {
+private inline fun Modifier.applyIf(
+    condition: Boolean,
+    modifier: Modifier.() -> Modifier
+): Modifier {
     return if (condition) {
         then(modifier(Modifier))
     } else {
@@ -177,6 +189,7 @@ class MainActivity : ComponentActivity() {
                 var displayInstructions by remember { mutableStateOf(false) }
                 var displayWhatsNew by remember { mutableStateOf(storage.newInstall) }
                 var displayAppInfo by remember { mutableStateOf(false) }
+                var displayEvents by remember { mutableStateOf(false) }
 
                 Scaffold(
                     topBar = {
@@ -189,6 +202,7 @@ class MainActivity : ComponentActivity() {
                                     context
                                 ) { value ->
                                     when (value) {
+                                        getString(R.string.list_events) -> displayEvents = true
                                         context.getString(R.string.app_usage_menu) -> displayInstructions = true
                                         context.getString(R.string.release_notes_menu) -> displayWhatsNew = true
                                         context.getString(R.string.about_menu) -> displayAppInfo = true
@@ -199,6 +213,150 @@ class MainActivity : ComponentActivity() {
                     }, modifier = Modifier.fillMaxSize()
                 )
                 { innerPadding ->
+
+                    // Show what events the app recognizes
+                    if (displayEvents) {
+                        Dialog(onDismissRequest = { displayEvents = false }) {
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth(0.95f)
+                                    .fillMaxHeight(0.65f),
+                            )
+                            {
+                                Column(
+                                    modifier = Modifier
+                                        .wrapContentSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
+                                ) {
+                                    // Header for the list box
+                                    Text(
+                                        stringResource(R.string.events_in_next_two_weeks),
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                    )
+
+                                    // List of events
+                                    LazyColumn(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentPadding = PaddingValues(16.dp)
+                                    ) {
+
+                                        // find events for the next two weeks
+                                        val time = LocalDateTime.now(ZoneId.systemDefault())
+                                        val events =
+                                            ReadCalendars(context).readCalendar(time, 60L * 24 * 7)
+
+                                        itemsIndexed(events) { index, item ->
+                                            // Get Dark Mode Setting, then choose alternating colors for each row's background
+                                            val nightModeFlags =
+                                                context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                                            val bgColor1 = ContextCompat.getColor(
+                                                context,
+                                                if (nightModeFlags == Configuration.UI_MODE_NIGHT_NO)
+                                                    R.color.white else R.color.black
+                                            )
+                                            val bgColor2 = ContextCompat.getColor(
+                                                context,
+                                                if (nightModeFlags == Configuration.UI_MODE_NIGHT_NO)
+                                                    R.color.white95percent else R.color.black20percent
+                                            )
+
+                                            Column(
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .background(
+                                                        color = Color(if (index % 2 == 1) bgColor1 else bgColor2),
+                                                        shape = RectangleShape
+                                                    )
+                                            )
+                                            {
+
+                                                // Event's title
+                                                Row() {
+                                                    val title = item.title
+                                                    Text(
+                                                        text = """$title""",
+                                                        modifier = Modifier
+                                                            .padding(horizontal = 8.dp),
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+
+                                                // Event's time, and options if specified
+                                                Row() {
+                                                    Spacer(
+                                                        modifier = Modifier
+                                                            .padding(horizontal = 8.dp)
+                                                    )
+                                                    val dateFormatter =
+                                                        DateTimeFormatter.ofLocalizedDate(
+                                                            FormatStyle.SHORT
+                                                        )
+                                                            .withLocale(Locale.getDefault())
+                                                    val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+                                                    val timeFormatter =
+                                                        DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "hh:mm a")
+                                                    val date = item.beginTime.format(dateFormatter)
+                                                    val startTime = item.beginTime.format(timeFormatter)
+                                                    val endTime = item.endTime.format(timeFormatter)
+                                                    Text(
+                                                        text = "$date $startTime-$endTime",
+                                                        fontSize = 10.sp,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth(0.85f)
+                                                            .padding(horizontal = 8.dp)
+                                                    )
+
+                                                    // Notifications?
+                                                    var options = if (item.isNotify) "N" else ""
+                                                    // Vibrate instead of silent?
+                                                    if (item.isVibrate) {
+                                                        options += "V"
+                                                    }
+                                                    // Start earlier than the default?
+                                                    if (item.startOffset > 0) {
+                                                        val offset = item.startOffset
+                                                        options += "+$offset"
+                                                    }
+                                                    // If anu options are present, surround with parenthesis
+                                                    if (options.length > 0) {
+                                                        options = "($options)"
+                                                    }
+                                                    Text(
+                                                        text = options,
+                                                        fontSize = 10.sp,
+                                                    )
+                                                }
+
+                                                // Make note of repeating options.
+                                                if (item.isRepeating) {
+                                                    val repeat = item.isRepeating
+                                                    Row() {
+                                                        Spacer(
+                                                            modifier = Modifier
+                                                                .padding(horizontal = 8.dp)
+                                                        )
+                                                        Text(
+                                                            text = getString(R.string.event_repeats),
+                                                            fontSize = 10.sp,
+                                                            modifier = Modifier
+                                                                .padding(horizontal = 8.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // If the app has been updated, display a dialog explaining changes
                     if (displayWhatsNew) {
                         storage.newInstall = false
@@ -344,6 +502,13 @@ fun AppMenu(
         DropdownMenuItem(
             onClick = {
                 displayMenu = false
+                onClick(context.getString(R.string.list_events))
+            },
+            text = { Text(text = stringResource(R.string.list_events)) }
+        )
+        DropdownMenuItem(
+            onClick = {
+                displayMenu = false
                 onClick(context.getString(R.string.app_usage_menu))
             },
             text = { Text(text = stringResource(R.string.app_usage_menu)) }
@@ -435,7 +600,7 @@ private fun writeExternalFile(
     context: Context,
     inStream: InputStream
 ): String {
-    val baseFilename ="ringcontrol_logcat-"
+    val baseFilename = "ringcontrol_logcat-"
     val mimeType = "text/plain"
 
     val time = LocalDateTime.now(ZoneId.systemDefault())
@@ -742,7 +907,7 @@ fun SampleIcon(
                     // Example for future use?
                     .applyIf(scale > 0.0f) {
                         height((100f * scale).dp)
-                        .width((100f * scale).dp)
+                            .width((100f * scale).dp)
                     },
                 contentDescription = "",
             )

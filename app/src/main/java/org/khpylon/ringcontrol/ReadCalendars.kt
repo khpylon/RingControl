@@ -11,14 +11,15 @@ import android.media.AudioManager
 import android.provider.CalendarContract
 import android.text.format.DateUtils
 import android.util.Log
+import androidx.core.net.toUri
+import com.google.ical.values.RRule
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.Date
-import androidx.core.net.toUri
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import java.util.Date
 import java.util.regex.Pattern
-import kotlin.collections.isNotEmpty
+
 
 private const val NO_ANNOTATION = 0
 private const val DND_ANNOTATION = 1
@@ -30,39 +31,40 @@ class ReadCalendars // Store context used locally.
 internal constructor(private val mContext: Context) {
 
     private fun checkForAnnotations(string: String): Int {
-
-        val pattern = Pattern.compile("#(rc|ring ?control)(/(v|n|nv|vn))*#", Pattern.CASE_INSENSITIVE)
-        val matcher = pattern.matcher(string )
+        val pattern = Pattern.compile("#(rc|ring ?control)([^#]*)#", Pattern.CASE_INSENSITIVE)
+        val matcher = pattern.matcher(string)
         return if (matcher.find()) {
-            val substring = matcher.group().lowercase()
-            return if (substring.contains("/nv#") || substring.contains("/vn#")) {
-                VIBRATE_NOTIFY_ANNOTATION
-            } else if (substring.contains("/v#")) {
-                VIBRATE_ANNOTATION
-            } else if (substring.contains("/n#")) {
-                NOTIFY_ANNOTATION
+            if (matcher.groupCount() == 1) {
+                return DND_ANNOTATION
             } else {
-                DND_ANNOTATION
+                val substring = matcher.group(2)!!.lowercase()
+                return if (substring.contains("n") && substring.contains("v")) {
+                    VIBRATE_NOTIFY_ANNOTATION
+                } else if (substring.contains("v")) {
+                    VIBRATE_ANNOTATION
+                } else if (substring.contains("n")) {
+                    NOTIFY_ANNOTATION
+                } else {
+                    DND_ANNOTATION
+                }
             }
         } else {
             NO_ANNOTATION
         }
+    }
 
-//        val lowercaseString = string.lowercase()
-//
-//        return if (lowercaseString.contains("#ringcontrol/v#") ||
-//            lowercaseString.contains("#ring control/v#") ||
-//            lowercaseString.contains("#rc/v#")
-//        ) {
-//            VIBRATE_ANNOTATION
-//        } else if (lowercaseString.contains("#ringcontrol#") ||
-//            lowercaseString.contains("#ring control#") ||
-//            lowercaseString.contains("#rc#")
-//        ) {
-//            DND_ANNOTATION
-//        } else {
-//            NO_ANNOTATION
-//        }
+    private fun delayAnnotation(string: String): Long {
+        val pattern = Pattern.compile("#(rc|ring ?control)([^#]*)#", Pattern.CASE_INSENSITIVE)
+        val matcher = pattern.matcher(string)
+        if (matcher.find() && matcher.groupCount() == 2) {
+            val substring = matcher.group(2)!!.lowercase()
+            val timePattern = Pattern.compile("""\+(\d+)""", Pattern.CASE_INSENSITIVE)
+            val timeMatcher = timePattern.matcher(substring)
+            if (timeMatcher.find()) {
+                return timeMatcher.group().substring(1).toLong()
+            }
+        }
+        return 0L
     }
 
     private fun isVibrate(annotation: Int): Boolean {
@@ -99,6 +101,7 @@ internal constructor(private val mContext: Context) {
                 CalendarContract.Instances.ALL_DAY,
                 CalendarContract.Instances.BEGIN,
                 CalendarContract.Instances.END,
+                CalendarContract.Instances.RRULE,
                 CalendarContract.EventsEntity.DESCRIPTION,
             ), null, null, "begin ASC"
         )
@@ -118,9 +121,14 @@ internal constructor(private val mContext: Context) {
                     eventCursor.getInt(eventCursor.getColumnIndex(CalendarContract.Instances.EVENT_ID))
                 val title =
                     eventCursor.getString(eventCursor.getColumnIndex(CalendarContract.Instances.TITLE))
+                val rrule =
+                    eventCursor.getString(eventCursor.getColumnIndex(CalendarContract.Instances.RRULE))
                 val description =
                     eventCursor.getString(eventCursor.getColumnIndex(CalendarContract.EventsEntity.DESCRIPTION))
                         .lowercase()
+
+//                val rule = if (rrule == null) RRule()
+//                    else RRule("RRULE:$rrule")
 
                 // Ignore all-day events and events longer than a day.
                 if (!allDay && begin !== end &&
@@ -132,6 +140,10 @@ internal constructor(private val mContext: Context) {
                     // If title or description contain the key phrase, process the event
 
                     if (titleMatch != NO_ANNOTATION || descriptionMatch != NO_ANNOTATION) {
+                        var startOffset = delayAnnotation (title)
+                        if (startOffset == 0L) {
+                            startOffset = delayAnnotation (description)
+                        }
                         val endInMillis = end.toInstant().toEpochMilli()
                         val isVibrate = isVibrate(titleMatch)
                                 || isVibrate(descriptionMatch)
@@ -143,7 +155,9 @@ internal constructor(private val mContext: Context) {
                                 EventInfo(
                                     ZonedDateTime.ofInstant(begin.toInstant(), zoneId),
                                     ZonedDateTime.ofInstant(end.toInstant(), zoneId),
-                                    eventId, title, isVibrate, isNotify
+                                    eventId, title, isVibrate, isNotify,
+                                    startOffset,
+                                    rrule != null && rrule.length > 0
                                 )
                             )
                             Log.e(Constants.LOGTAG, "Found event '$title' ($eventId)")
@@ -193,7 +207,8 @@ internal constructor(private val mContext: Context) {
                 // save event id
                 appInfo.eventId = events[0].eventId
                 // We are now handling an event.
-                appInfo.appState = if (events[0].isVibrate) StorageConstants.VIBRATE else StorageConstants.SILENT
+                appInfo.appState =
+                    if (events[0].isVibrate) StorageConstants.VIBRATE else StorageConstants.SILENT
 
                 val endTime = events[0].endTime
                 val title = events[0].title
@@ -233,7 +248,8 @@ internal constructor(private val mContext: Context) {
                 val curRinger = am.ringerMode
                 val appState = appInfo.appState
                 if ((appState == StorageConstants.SILENT && curRinger == AudioManager.RINGER_MODE_SILENT)
-                    || (appState == StorageConstants.VIBRATE && curRinger == AudioManager.RINGER_MODE_VIBRATE)) {
+                    || (appState == StorageConstants.VIBRATE && curRinger == AudioManager.RINGER_MODE_VIBRATE)
+                ) {
                     Log.d(Constants.LOGTAG, "findEvents() restoring ringer")
                     am.ringerMode = appInfo.ringStatus
                 }
