@@ -12,8 +12,8 @@ android {
         applicationId = "org.khpylon.ringcontrol"
         minSdk = 30
         targetSdk = 36
-        versionCode = 13
-        versionName = "2025.11.17-18"
+        versionCode = 14
+        versionName = "2026.05.04-18"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.material.icons.core)
+    implementation(libs.google.rfc.x445)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
