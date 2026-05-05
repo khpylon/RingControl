@@ -45,7 +45,7 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
         val dateText = time.format(dateFormatter)
         val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
         val timeFormatter =
-            DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "hh:mm a")
+            DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a")
         val timeText = time.format(timeFormatter)
 
         Log.d(Constants.LOGTAG, "Next AlarmReceiver at $dateText $timeText")
