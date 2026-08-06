@@ -2,6 +2,7 @@ package org.khpylon.ringcontrol
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.ContentValues
 import android.content.Context
@@ -708,7 +709,7 @@ private fun WidgetPermissions(context: Context) {
         }
 
     var calendarPermission by remember {
-        mutableStateOf(storage.isCalendarEnabled)
+        mutableStateOf(storage.isCalendarEnabled && storage.isExactAlarmEnabled)
     }
 
     val calLauncher =
@@ -717,8 +718,19 @@ private fun WidgetPermissions(context: Context) {
             storage.isCalendarEnabled = context.checkSelfPermission(
                 Manifest.permission.READ_CALENDAR
             ) == PackageManager.PERMISSION_GRANTED
-            calendarPermission = storage.isCalendarEnabled
+            calendarPermission = storage.isCalendarEnabled && storage.isExactAlarmEnabled
         }
+
+    val alarmManager = remember { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
+
+    val alarmLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { _ ->
+        // Re-check permission status when user navigates back to the app
+        storage.isExactAlarmEnabled =  if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.S )
+            alarmManager.canScheduleExactAlarms() else true
+        calendarPermission = storage.isCalendarEnabled && storage.isExactAlarmEnabled
+    }
 
     var notificationPermission by remember {
         mutableStateOf(storage.isNotificationEnabled)
@@ -731,7 +743,7 @@ private fun WidgetPermissions(context: Context) {
                     || context.checkSelfPermission(
                 Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
-            calendarPermission = storage.isNotificationEnabled
+            notificationPermission = storage.isNotificationEnabled
         }
 
     Row(
@@ -800,16 +812,26 @@ private fun WidgetPermissions(context: Context) {
         isChecked = calendarPermission,
         onClick = { value ->
             if (value) {
-                if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
-                    storage.isCalendarEnabled = true
-                    calendarPermission = true
-                } else {
+                if ( context.checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
                     calLauncher.launch(Manifest.permission.READ_CALENDAR)
+                } else {
+                    storage.isCalendarEnabled = true
+                }
+                if ( !alarmManager.canScheduleExactAlarms() ) {
+                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                        .apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                    alarmLauncher.launch(intent)
+                } else {
+                    storage.isExactAlarmEnabled = true
                 }
             } else {
                 storage.isCalendarEnabled = false
-                calendarPermission = false
+                storage.isExactAlarmEnabled = false
             }
+            calendarPermission = storage.isCalendarEnabled && storage.isExactAlarmEnabled
         }
     )
 
@@ -1159,6 +1181,12 @@ fun MainApplication(
         } else {
             CalendarAlarmReceiver.cancelAlarm(context)
         }
+    }
+
+    if (notificationManager.isNotificationPolicyAccessGranted) {
+        // Start your Foreground Service safely
+        val serviceIntent = Intent(context, RingerModeService::class.java)
+        ContextCompat.startForegroundService(context, serviceIntent)
     }
 
     var showSettings by rememberSaveable { mutableStateOf(!notificationManager.isNotificationPolicyAccessGranted) }

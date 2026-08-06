@@ -5,9 +5,11 @@ import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.media.AudioManager
+import android.os.Build
 import android.provider.CalendarContract
 import android.text.format.DateUtils
 import android.util.Log
@@ -139,9 +141,9 @@ internal constructor(private val mContext: Context) {
                     // If title or description contain the key phrase, process the event
 
                     if (titleMatch != NO_ANNOTATION || descriptionMatch != NO_ANNOTATION) {
-                        var startOffset = delayAnnotation (title)
+                        var startOffset = delayAnnotation(title)
                         if (startOffset == 0L) {
-                            startOffset = delayAnnotation (description)
+                            startOffset = delayAnnotation(description)
                         }
                         val endInMillis = end.toInstant().toEpochMilli()
                         val isVibrate = isVibrate(titleMatch)
@@ -159,10 +161,10 @@ internal constructor(private val mContext: Context) {
                                     rrule != null && rrule.length > 0
                                 )
                             )
-                            Log.e(Constants.LOGTAG, "Found event '$title' ($eventId)")
+                            Log.d(Constants.LOGTAG, "Found event '$title' ($eventId)")
                         }
                         if (events.size == 2) {
-                            Log.e(Constants.LOGTAG, "Skipping additional events.")
+                            Log.d(Constants.LOGTAG, "Skipping additional events.")
                             break
                         }
                     }
@@ -200,9 +202,35 @@ internal constructor(private val mContext: Context) {
                 val am: AudioManager =
                     mContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 // save current ringer setting
-                appInfo.ringStatus = am.getRingerMode()
+                appInfo.ringStatus = am.ringerMode
                 // silence the ringer
-                am.setRingerMode(if (events[0].isVibrate) AudioManager.RINGER_MODE_VIBRATE else AudioManager.RINGER_MODE_SILENT)
+                val newRingerSetting =
+                    if (events[0].isVibrate) AudioManager.RINGER_MODE_VIBRATE else AudioManager.RINGER_MODE_SILENT
+
+                val serviceIntent = Intent(mContext, RingerModeService::class.java).apply {
+                    putExtra("MODE", newRingerSetting)
+                }
+
+                // Safely start the foreground service
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    mContext.startForegroundService(serviceIntent)
+                } else {
+                    mContext.startService(serviceIntent)
+                }
+
+//                for (i in 1..5) {
+//                    am.ringerMode = newRingerSetting
+//                    if (newRingerSetting == am.ringerMode) {
+//                        break
+//                    }
+//                }
+//                if (newRingerSetting != am.ringerMode) {
+//                    Log.e(
+//                        Constants.LOGTAG,
+//                        "findEvents() ringmode failed to change from " +
+//                                am.ringerMode + " to " + newRingerSetting
+//                    )
+//                }
                 // save event id
                 appInfo.eventId = events[0].eventId
                 // We are now handling an event.
@@ -240,6 +268,7 @@ internal constructor(private val mContext: Context) {
             if (events.isEmpty() || !events[0]
                     .isEventActive(now.atZone(ZoneId.systemDefault()))
             ) {
+
                 val am: AudioManager =
                     mContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
@@ -249,9 +278,23 @@ internal constructor(private val mContext: Context) {
                 if ((appState == StorageConstants.SILENT && curRinger == AudioManager.RINGER_MODE_SILENT)
                     || (appState == StorageConstants.VIBRATE && curRinger == AudioManager.RINGER_MODE_VIBRATE)
                 ) {
+                    val serviceIntent = Intent(mContext, RingerModeService::class.java).apply {
+                        putExtra("MODE", appInfo.ringStatus)
+                    }
+
+                    // Safely start the foreground service
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        mContext.startForegroundService(serviceIntent)
+                    } else {
+                        mContext.startService(serviceIntent)
+                    }
                     Log.d(Constants.LOGTAG, "findEvents() restoring ringer")
-                    am.ringerMode = appInfo.ringStatus
+
+                //                    am.ringerMode = appInfo.ringStatus
                 }
+
+
+
                 appInfo.appState = StorageConstants.INACTIVE
                 Log.d(Constants.LOGTAG, "findEvents() going INACTIVE")
 

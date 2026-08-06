@@ -180,6 +180,26 @@ class Storage(private val context: Context) {
             commitWait(edit)
         }
 
+    var isExactAlarmEnabled: Boolean
+        get() {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            return pref.getBoolean(StorageConstants.CALENDAR_STATUS, false)
+        }
+        set(value) {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            val edit = pref.edit()
+            // Store data. you may also use putFloat(), putInt(), putLong() as requirement
+            edit.putBoolean(StorageConstants.CALENDAR_STATUS, value)
+            // Commit the changes
+            commitWait(edit)
+        }
+
     var isNotificationEnabled: Boolean
         get() {
             val pref = context.getSharedPreferences(
