@@ -32,7 +32,7 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
 
         // Determine when the next alarm should occur
         val next = if (!isCalendarEvent) {
-            time.minusMinutes(INTERVAL)
+            time.plusMinutes(INTERVAL)
         } else {
             events[0].alarmTime(time.atZone(ZoneId.systemDefault()))
         }
@@ -47,8 +47,9 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
         val timeFormatter =
             DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a")
         val timeText = time.format(timeFormatter)
-
-        Log.d(Constants.LOGTAG, "Next AlarmReceiver at $dateText $timeText")
+        Log.d(Constants.LOGTAG, "This AlarmReceiver at $dateText $timeText")
+        val nextTimeText = next.format(timeFormatter)
+        Log.d(Constants.LOGTAG, "Next AlarmReceiver at $dateText $nextTimeText")
         Log.d(Constants.LOGTAG, "isCalendarEvent is $isCalendarEvent")
 
         // If an event is active, or the user wants to see the app is active, display an notification
@@ -64,7 +65,7 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
             }
 
             val title = events[0].title
-            Log.e(Constants.LOGTAG, "event is '$title'")
+            Log.d(Constants.LOGTAG, "event is '$title'")
             val builder = NotificationCompat.Builder(context, NORMAL_NOTIFICATIONS)
                 .setSmallIcon(R.drawable.notifier_recycler)
                 .setContentTitle("Ring Control")
