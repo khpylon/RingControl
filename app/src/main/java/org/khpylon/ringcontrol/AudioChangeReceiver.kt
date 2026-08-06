@@ -41,10 +41,9 @@ class AudioChangeReceiver : BroadcastReceiver() {
             else -> {
                 val stored = Storage(context).ringMode
                 val mode = audioManager.ringerMode
-                Log.d(Constants.LOGTAG, "alarm stored=$stored mode=$mode")
                 if (stored != mode) {
+                    Log.d(Constants.LOGTAG, "widget update needed: stored=$stored mode=$mode")
                     Storage(context).ringMode = audioManager.ringerMode
-                    Log.d(Constants.LOGTAG, "widget update needed")
                     GlanceWidget.updateWidget(context)
                 }
                 nextAlarm(context)
