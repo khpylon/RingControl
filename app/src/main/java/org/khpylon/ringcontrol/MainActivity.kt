@@ -709,7 +709,7 @@ private fun WidgetPermissions(context: Context) {
         }
 
     var calendarPermission by remember {
-        mutableStateOf(storage.isCalendarEnabled && storage.isExactAlarmEnabled)
+        mutableStateOf(storage.isCalendarEnabled )
     }
 
     val calLauncher =
@@ -718,19 +718,8 @@ private fun WidgetPermissions(context: Context) {
             storage.isCalendarEnabled = context.checkSelfPermission(
                 Manifest.permission.READ_CALENDAR
             ) == PackageManager.PERMISSION_GRANTED
-            calendarPermission = storage.isCalendarEnabled && storage.isExactAlarmEnabled
+            calendarPermission = storage.isCalendarEnabled
         }
-
-    val alarmManager = remember { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
-
-    val alarmLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { _ ->
-        // Re-check permission status when user navigates back to the app
-        storage.isExactAlarmEnabled =  if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.S )
-            alarmManager.canScheduleExactAlarms() else true
-        calendarPermission = storage.isCalendarEnabled && storage.isExactAlarmEnabled
-    }
 
     var notificationPermission by remember {
         mutableStateOf(storage.isNotificationEnabled)
@@ -812,26 +801,16 @@ private fun WidgetPermissions(context: Context) {
         isChecked = calendarPermission,
         onClick = { value ->
             if (value) {
-                if ( context.checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
-                    calLauncher.launch(Manifest.permission.READ_CALENDAR)
-                } else {
+                if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
                     storage.isCalendarEnabled = true
-                }
-                if ( !alarmManager.canScheduleExactAlarms() ) {
-                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                        .apply {
-                            data = Uri.fromParts("package", context.packageName, null)
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                    alarmLauncher.launch(intent)
+                    calendarPermission = true
                 } else {
-                    storage.isExactAlarmEnabled = true
+                    calLauncher.launch(Manifest.permission.READ_CALENDAR)
                 }
             } else {
                 storage.isCalendarEnabled = false
-                storage.isExactAlarmEnabled = false
+                calendarPermission = false
             }
-            calendarPermission = storage.isCalendarEnabled && storage.isExactAlarmEnabled
         }
     )
 
@@ -1183,13 +1162,9 @@ fun MainApplication(
         }
     }
 
-    if (notificationManager.isNotificationPolicyAccessGranted) {
-        // Start your Foreground Service safely
-        val serviceIntent = Intent(context, RingerModeService::class.java)
-        ContextCompat.startForegroundService(context, serviceIntent)
-    }
-
+    // If settings aren't enabled (specifically notifications), start by displaying the Settings screen
     var showSettings by rememberSaveable { mutableStateOf(!notificationManager.isNotificationPolicyAccessGranted) }
+
     var showText by rememberSaveable { mutableStateOf(storage.textDescription) }
 
     if (config.orientation == Configuration.ORIENTATION_PORTRAIT) {
