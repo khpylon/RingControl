@@ -1,12 +1,11 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
     namespace = "org.khpylon.ringcontrol"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "org.khpylon.ringcontrol"
@@ -42,7 +41,7 @@ android {
 
     sourceSets {
         sourceSets.getByName("debug") {
-            res.srcDirs("debug/res")
+            res.directories.add("debug/res")
         }
     }
 
@@ -50,9 +49,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
-    kotlin {
-        jvmToolchain(21)
-    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -70,7 +67,6 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation(libs.compose.colorpicker)
-    implementation(libs.compose.colorpicker)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.work.runtime.ktx)
@@ -80,8 +76,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
+//    androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
