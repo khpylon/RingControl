@@ -2,7 +2,6 @@ package org.khpylon.ringcontrol
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.ContentValues
 import android.content.Context
@@ -1176,19 +1175,6 @@ fun MainApplication(
             modifier = modifier
                 .padding(horizontal = 10.dp) // add some space on left and right
         ) {
-//            ///
-//            TopAppBar(
-//                title = { Text(context.getString(R.string.app_name)) },
-//                actions = {
-//
-//                    // Draw the menus and get the selected result
-//                    AppMenu(
-//                        context
-//                    ) { value -> onMenuClick(value) }
-//                }
-//            )
-//            ///
-
             DescAndControl(
                 showSettings,
                 onClick = {
@@ -1252,7 +1238,6 @@ fun MainApplication(
             Column(
                 modifier = modifier
                     .fillMaxWidth()
-//                    .padding(horizontal = 10.dp) // add some space on left and right
             ) {
                 if (showSettings) {
                     WidgetPermissions(context)

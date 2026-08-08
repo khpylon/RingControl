@@ -9,7 +9,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.media.AudioManager
-import android.os.Build
 import android.provider.CalendarContract
 import android.text.format.DateUtils
 import android.util.Log
@@ -20,7 +19,6 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.regex.Pattern
-
 
 private const val NO_ANNOTATION = 0
 private const val DND_ANNOTATION = 1
@@ -307,11 +305,7 @@ internal constructor(private val mContext: Context) {
         }
 
         // Run service to change ringer mode
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mContext.startForegroundService(serviceIntent)
-        } else {
-            mContext.startService(serviceIntent)
-        }
+        mContext.startForegroundService(serviceIntent)
         Log.d(
             Constants.LOGTAG, "changeRinger() setting ringer to " +
                     when (mode) {
