@@ -249,7 +249,7 @@ class MainActivity : ComponentActivity() {
                                         // find events for the next two weeks
                                         val time = LocalDateTime.now(ZoneId.systemDefault())
                                         val events =
-                                            ReadCalendars(context).readCalendar(time, 60L * 24 * 7)
+                                            ReadCalendars(context).readCalendar(time, 60L * 24 * 14, 10)
 
                                         itemsIndexed(events) { index, item ->
                                             // Get Dark Mode Setting, then choose alternating colors for each row's background
@@ -485,6 +485,7 @@ fun AppMenu(
     onClick: (String) -> Unit
 ) {
     var displayMenu by remember { mutableStateOf(false) }
+    val storage = Storage(context)
 
     // Creating Icon button for dropdown menu
     IconButton(onClick = { displayMenu = !displayMenu }) {
@@ -497,13 +498,15 @@ fun AppMenu(
         onDismissRequest = { displayMenu = false },
     ) {
         // Add in each menu item
-        DropdownMenuItem(
-            onClick = {
-                displayMenu = false
-                onClick(context.getString(R.string.list_events))
-            },
-            text = { Text(text = stringResource(R.string.list_events)) }
-        )
+        if(storage.isCalendarEnabled) {
+            DropdownMenuItem(
+                onClick = {
+                    displayMenu = false
+                    onClick(context.getString(R.string.list_events))
+                },
+                text = { Text(text = stringResource(R.string.list_events)) }
+            )
+        }
         DropdownMenuItem(
             onClick = {
                 displayMenu = false
