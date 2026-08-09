@@ -1,1 +1,2 @@
-Fix issue with calendar events not changing ringer mode on Android 17.
+Clean up logic handling active calendar events.
+Set an alarm is a new event is discovered when listing events for the user.
