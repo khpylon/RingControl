@@ -18,7 +18,9 @@ import java.time.format.FormatStyle
 import java.util.Date
 import java.util.Locale
 
-private const val INTERVAL = 20L  // if no events are found, check again in 20 minutes
+object CalendarConstants {
+    const val INTERVAL = 20L  // if no events are found, check again in 20 minutes
+}
 
 class CalendarAlarmReceiver : BroadcastReceiver() {
 
@@ -32,10 +34,12 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
 
         // Determine when the next alarm should occur
         val next = if (!isCalendarEvent) {
-            time.plusMinutes(INTERVAL)
+            time.plusMinutes(CalendarConstants.INTERVAL)
         } else {
             events[0].alarmTime(time.atZone(ZoneId.systemDefault()))
         }
+
+        storage.isPending = isCalendarEvent
 
         // Format the time for the next alarm.
         val dateFormatter =
@@ -48,11 +52,9 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
             DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a")
         val timeText = time.format(timeFormatter)
         Log.d(Constants.LOGTAG, "This AlarmReceiver at $dateText $timeText")
-        val nextTimeText = next.format(timeFormatter)
-        Log.d(Constants.LOGTAG, "Next AlarmReceiver at $dateText $nextTimeText")
         Log.d(Constants.LOGTAG, "isCalendarEvent is $isCalendarEvent")
 
-        // If an event is active, or the user wants to see the app is active, display an notification
+        // If an event is active, or the user wants to see the app is active, display a notification
         if (storage.isNotificationEnabled && events.isNotEmpty()
             && events[0].isEventActive(time.atZone(ZoneId.systemDefault()))
             && events[0].isNotify
@@ -75,18 +77,10 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
         }
 
         // Set the next alarm
-        val nextAlarmTime = next.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val intent = Intent(context, CalendarAlarmReceiver::class.java)
-        val pendingIntent =
-            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.setWindow(
-            AlarmManager.RTC_WAKEUP,
-            nextAlarmTime,
-            DateUtils.SECOND_IN_MILLIS * 5,
-            pendingIntent
-        )
+        setAlarm(context, next)
     }
+
+
 
     companion object {
         private const val NORMAL_NOTIFICATIONS = "NORMAL_NOTIFICATIONS"
@@ -111,6 +105,31 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
             notificationManager.createNotificationChannel(channel)
         }
 
+        @JvmStatic
+        fun setAlarm(context: Context, next: LocalDateTime) {
+            val dateFormatter = DateTimeFormatter.ofLocalizedDate(
+                FormatStyle.SHORT
+            ).withLocale(Locale.getDefault())
+            val dateText = next.format(dateFormatter)
+
+            val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+            val timeFormatter =
+                DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a")
+            val timeText = next.format(timeFormatter)
+            Log.d(Constants.LOGTAG, "Next AlarmReceiver at $dateText $timeText")
+
+            val alarmTime = next.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val intent = Intent(context, CalendarAlarmReceiver::class.java)
+            val pendingIntent =
+                PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmManager.setWindow(
+                AlarmManager.RTC_WAKEUP,
+                alarmTime,
+                DateUtils.SECOND_IN_MILLIS * 5,
+                pendingIntent
+            )
+        }
         @JvmStatic
         fun startAlarm(context: Context) {
             val intent = Intent(context, CalendarAlarmReceiver::class.java)

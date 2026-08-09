@@ -16,6 +16,7 @@ object StorageConstants {
     const val NEW_INSTALL = "newInstall"
     const val EVENT_ID: String = "event_id"
     const val APP_STATE: String = "app_state"
+    const val PENDING: String = "pending"
     const val RING_STATUS: String = "ring_status"
     const val CALENDAR_STATUS: String = "calendar_status"
     const val NOTIFICATION_STATUS: String = "notification_status"
@@ -196,6 +197,26 @@ class Storage(private val context: Context) {
             val edit = pref.edit()
             // Store data. you may also use putFloat(), putInt(), putLong() as requirement
             edit.putBoolean(StorageConstants.NOTIFICATION_STATUS, value)
+            // Commit the changes
+            commitWait(edit)
+        }
+
+    var isPending: Boolean
+        get() {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            return pref.getBoolean(StorageConstants.PENDING, false)
+        }
+        set(value) {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            val edit = pref.edit()
+            // Store data. you may also use putFloat(), putInt(), putLong() as requirement
+            edit.putBoolean(StorageConstants.PENDING, value)
             // Commit the changes
             commitWait(edit)
         }

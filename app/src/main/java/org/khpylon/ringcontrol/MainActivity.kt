@@ -2,7 +2,9 @@ package org.khpylon.ringcontrol
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlarmManager
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -16,6 +18,8 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.MediaStore
 import android.provider.Settings
+import android.text.format.DateUtils
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -118,6 +122,8 @@ import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
@@ -203,9 +209,14 @@ class MainActivity : ComponentActivity() {
                                 ) { value ->
                                     when (value) {
                                         getString(R.string.list_events) -> displayEvents = true
-                                        context.getString(R.string.app_usage_menu) -> displayInstructions = true
-                                        context.getString(R.string.release_notes_menu) -> displayWhatsNew = true
-                                        context.getString(R.string.about_menu) -> displayAppInfo = true
+                                        context.getString(R.string.app_usage_menu) -> displayInstructions =
+                                            true
+
+                                        context.getString(R.string.release_notes_menu) -> displayWhatsNew =
+                                            true
+
+                                        context.getString(R.string.about_menu) -> displayAppInfo =
+                                            true
                                     }
                                 }
                             }
@@ -248,7 +259,31 @@ class MainActivity : ComponentActivity() {
                                         // find events for the next two weeks
                                         val time = LocalDateTime.now(ZoneId.systemDefault())
                                         val events =
-                                            ReadCalendars(context).readCalendar(time, 60L * 24 * 14, 10)
+                                            ReadCalendars(context).readCalendar(
+                                                time,
+                                                60L * 24 * 14,
+                                                10
+                                            )
+
+                                        // See if there's a new event that should be handled
+                                        if (!storage.isPending && events.isNotEmpty()
+                                            && !events[0].isEventActive(time.atZone(ZoneId.systemDefault()))
+                                        ) {
+
+                                            // Find out how many seconds between this event and not
+                                            val diff = events[0].beginTime.toEpochSecond() -
+                                                    time.toEpochSecond(ZonedDateTime.now().offset)
+
+                                            // If it's within the interval, signal it needs to be handled
+                                            if (diff < CalendarConstants.INTERVAL * 60) {
+                                                storage.isPending = true
+                                                val title = events[0].title
+                                                Log.d(Constants.LOGTAG,"found new pending event '$title'")
+                                                val next =
+                                                    events[0].alarmTime(time.atZone(ZoneId.systemDefault()))
+                                                CalendarAlarmReceiver.setAlarm(context, next)
+                                            }
+                                        }
 
                                         itemsIndexed(events) { index, item ->
                                             // Get Dark Mode Setting, then choose alternating colors for each row's background
@@ -279,8 +314,10 @@ class MainActivity : ComponentActivity() {
                                                 Row {
                                                     val title = item.title
                                                     Text(
-                                                        title, Modifier
-                                                            .padding(horizontal = 8.dp), maxLines = 1,
+                                                        title,
+                                                        Modifier
+                                                            .padding(horizontal = 8.dp),
+                                                        maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis
                                                     )
                                                 }
@@ -296,11 +333,15 @@ class MainActivity : ComponentActivity() {
                                                             FormatStyle.SHORT
                                                         )
                                                             .withLocale(Locale.getDefault())
-                                                    val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+                                                    val is24Hour =
+                                                        android.text.format.DateFormat.is24HourFormat(
+                                                            context
+                                                        )
                                                     val timeFormatter =
                                                         DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a")
                                                     val date = item.beginTime.format(dateFormatter)
-                                                    val startTime = item.beginTime.format(timeFormatter)
+                                                    val startTime =
+                                                        item.beginTime.format(timeFormatter)
                                                     val endTime = item.endTime.format(timeFormatter)
                                                     Text(
                                                         text = "$date $startTime-$endTime",
@@ -497,7 +538,7 @@ fun AppMenu(
         onDismissRequest = { displayMenu = false },
     ) {
         // Add in each menu item
-        if(storage.isCalendarEnabled) {
+        if (storage.isCalendarEnabled) {
             DropdownMenuItem(
                 onClick = {
                     displayMenu = false
@@ -711,7 +752,7 @@ private fun WidgetPermissions(context: Context) {
         }
 
     var calendarPermission by remember {
-        mutableStateOf(storage.isCalendarEnabled )
+        mutableStateOf(storage.isCalendarEnabled)
     }
 
     val calLauncher =
