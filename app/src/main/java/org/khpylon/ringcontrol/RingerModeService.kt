@@ -20,37 +20,44 @@ class RingerModeService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // 1. Build and display the mandatory persistent notification
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("RingControl Active")
-            .setContentText("Managing device audio profile in the background.")
-            .setSmallIcon(android.R.drawable.ic_lock_silent_mode)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
 
-        // 2. Start Foreground (Must include service type for API 34+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        // Before trying to change modes, make sure we gave permission
+        val notificationManager =
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        if (notificationManager.isNotificationPolicyAccessGranted) {
+
+            // 1. Build and display the mandatory persistent notification
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("RingControl Active")
+                .setContentText("Managing device audio profile in the background.")
+                .setSmallIcon(android.R.drawable.ic_lock_silent_mode)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
+
+            // 2. Start Foreground (Must include service type for API 34+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+
+            // 3. Safe to run execution logic now that the app is in Foreground context
+            val mode = intent?.getIntExtra("MODE", AudioManager.RINGER_MODE_NORMAL)
+                ?: AudioManager.RINGER_MODE_NORMAL
+            val am = getSystemService(AUDIO_SERVICE) as AudioManager
+            try {
+                am.ringerMode = mode
+            } catch (e: SecurityException) {
+                e.printStackTrace()
+            }
+
+            // 4. Stop the service right after completion
+            stopSelf()
         }
-
-        // 3. Safe to run execution logic now that the app is in Foreground context
-        val mode = intent?.getIntExtra("MODE", AudioManager.RINGER_MODE_NORMAL)
-            ?: AudioManager.RINGER_MODE_NORMAL
-        val am = getSystemService(AUDIO_SERVICE) as AudioManager
-        try {
-            am.ringerMode = mode
-        } catch (e: SecurityException) {
-            e.printStackTrace()
-        }
-
-        // 4. Stop the service right after completion
-        stopSelf()
 
         // 5. We're a one-shot operation, so don't restart
         return START_NOT_STICKY
@@ -59,15 +66,13 @@ class RingerModeService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "RingControl Background Service",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "RingControl Background Service",
+            NotificationManager.IMPORTANCE_LOW
+        )
+        val manager = getSystemService(NotificationManager::class.java)
+        manager?.createNotificationChannel(channel)
     }
 
 }
