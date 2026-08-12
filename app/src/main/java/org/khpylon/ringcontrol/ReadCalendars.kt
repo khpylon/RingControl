@@ -77,6 +77,22 @@ internal constructor(private val mContext: Context) {
     // Find all calendar events within a certain interval.
     @SuppressLint("Range")
     fun readCalendar(time: LocalDateTime, window: Long, numEvents: Int): MutableList<EventInfo> {
+
+        // Prepare to read application settings.
+        val appInfo = Storage(mContext)
+
+        // If we still don't have permissions to access calendars or ringer, punt.
+        if (mContext.checkSelfPermission(
+                Manifest.permission.READ_CALENDAR
+            ) != PackageManager.PERMISSION_GRANTED ||
+            mContext.checkSelfPermission(
+                Manifest.permission.ACCESS_NOTIFICATION_POLICY
+            ) != PackageManager.PERMISSION_GRANTED ||
+            !appInfo.isCalendarEnabled
+        ) {
+            return mutableListOf()
+        }
+
         val events = mutableListOf<EventInfo>()
         val zoneId = ZoneId.systemDefault()
 
@@ -175,17 +191,6 @@ internal constructor(private val mContext: Context) {
 
     // Logic for controlling the ringer.
     fun findEvents(now: LocalDateTime): MutableList<EventInfo> {
-
-        // If we still don't have permissions to access calendars or ringer, punt.
-        if (mContext.checkSelfPermission(
-                Manifest.permission.READ_CALENDAR
-            ) != PackageManager.PERMISSION_GRANTED ||
-            mContext.checkSelfPermission(
-                Manifest.permission.ACCESS_NOTIFICATION_POLICY
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return mutableListOf()
-        }
 
         // Prepare to read application settings.
         val appInfo = Storage(mContext)

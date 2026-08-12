@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.drawable.Drawable
@@ -13,13 +12,10 @@ import android.icu.text.MessageFormat
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
 import android.provider.MediaStore
-import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -57,18 +53,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -92,7 +83,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextIndent
@@ -570,9 +560,12 @@ fun AppMenu(
 @Composable
 fun InfoDialog(
     onDismissRequest: () -> Unit,
+    onConfirmRequest: () -> Unit = {},
     dialogTitle: String,
     dialogText: AnnotatedString,
-) {
+    confirmText: String? = null,
+    dismissText: String? = null,
+    ) {
     AlertDialog(
         icon = {
             Icon(Icons.Default.Info, contentDescription = "")
@@ -586,11 +579,31 @@ fun InfoDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             )
         },
-        onDismissRequest = {
-            onDismissRequest()
+        onDismissRequest = { onDismissRequest() },
+
+        // Only use confirm and dismiss if a button text exists
+        confirmButton = {
+            if (confirmText != null) {
+                TextButton(
+                    onClick = {
+                        onConfirmRequest()
+                    }
+                ) {
+                    Text( confirmText )
+                }
+            }
         },
-        confirmButton = { },
-        dismissButton = { }
+        dismissButton = {
+            if (dismissText != null) {
+                TextButton(
+                    onClick = {
+                        onDismissRequest()
+                    }
+                ) {
+                    Text( dismissText )
+                }
+            }
+        }
     )
 }
 
@@ -682,212 +695,6 @@ private fun readChangeFile(context: Context): List<String> {
     } catch (_: Exception) {
     }
     return message
-}
-
-// Composable to display control switches and their descriptions
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun OptionSwitchRow(
-    tooltip: String,
-    desc: AnnotatedString,
-    isChecked: Boolean,
-    onClick: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    )
-    {
-        TooltipBox(
-            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-            tooltip =
-                {
-                    PlainTooltip {
-                        Text(tooltip)
-                    }
-                },
-            state = rememberTooltipState()
-        ) {
-            Text(
-                text = desc,
-                modifier = Modifier
-                    .padding(10.dp)
-            )
-        }
-        Spacer(Modifier.weight(1f))  // separate text and toggle switch
-        Switch(
-            checked = isChecked,
-            onCheckedChange = onClick
-        )
-    }
-}
-
-@Composable
-private fun WidgetPermissions(context: Context) {
-    val storage = Storage(context)
-    val notificationManager =
-        context.getSystemService(android.app.Activity.NOTIFICATION_SERVICE) as NotificationManager
-    var modesAccessPermission by remember { mutableStateOf(notificationManager.isNotificationPolicyAccessGranted) }
-    val modesLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
-        {
-            modesAccessPermission = notificationManager.isNotificationPolicyAccessGranted
-        }
-
-    val packageName = context.packageName
-    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-    var batteryOptimized by remember { mutableStateOf(pm.isIgnoringBatteryOptimizations(packageName)) }
-
-    val batteryLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
-        {
-            val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-            batteryOptimized = pm.isIgnoringBatteryOptimizations(packageName)
-        }
-
-    var calendarPermission by remember {
-        mutableStateOf(storage.isCalendarEnabled)
-    }
-
-    val calLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())
-        {
-            storage.isCalendarEnabled = context.checkSelfPermission(
-                Manifest.permission.READ_CALENDAR
-            ) == PackageManager.PERMISSION_GRANTED
-            calendarPermission = storage.isCalendarEnabled
-        }
-
-    var notificationPermission by remember {
-        mutableStateOf(storage.isNotificationEnabled)
-    }
-
-    val notificationLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())
-        {
-            storage.isNotificationEnabled = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-                    || context.checkSelfPermission(
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-            notificationPermission = storage.isNotificationEnabled
-        }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    )
-    {
-        Text(
-            text = stringResource(R.string.tooltip_help),
-            fontSize = 12.sp,
-            modifier = Modifier.padding(5.dp)
-        )
-    }
-
-    // Toggle control for DND permissions
-    OptionSwitchRow(
-        tooltip = stringResource(R.string.dnd_tooltip),
-        desc = buildAnnotatedString {
-            withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                append(context.getString(R.string.dnd_permissions))
-            }
-            append(":\n  ")
-            withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                append(context.getString(if (modesAccessPermission) R.string.enabled_description else R.string.disabled_description))
-            }
-        },
-        isChecked = modesAccessPermission,
-        onClick = {
-            val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-            modesLauncher.launch(intent)
-        }
-    )
-
-    // Toggle control for battery optimization
-    OptionSwitchRow(
-        tooltip = stringResource(R.string.battery_tooltip),
-        desc = buildAnnotatedString {
-            withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                append(context.getString(R.string.battery_opt))
-            }
-            append(":\n  ")
-            withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description))
-            }
-        },
-        isChecked = batteryOptimized,
-        onClick = {
-            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-            batteryLauncher.launch(intent)
-        }
-    )
-
-    // Enable/disable calendar usage
-    OptionSwitchRow(
-        tooltip = stringResource(R.string.calendar_tooltip),
-        desc = buildAnnotatedString {
-            withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                append(context.getString(R.string.use_calendar_events))
-            }
-            append(":\n  ")
-            withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                append(context.getString(if (calendarPermission) R.string.enabled_description else R.string.disabled_description))
-            }
-
-        },
-        isChecked = calendarPermission,
-        onClick = { value ->
-            if (value) {
-                if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
-                    storage.isCalendarEnabled = true
-                    calendarPermission = true
-                } else {
-                    calLauncher.launch(Manifest.permission.READ_CALENDAR)
-                }
-            } else {
-                storage.isCalendarEnabled = false
-                calendarPermission = false
-            }
-        }
-    )
-
-    // Enable/disable calendar event notifications
-    if (calendarPermission) {
-        OptionSwitchRow(
-            tooltip = stringResource(R.string.notification_tooltip),
-            desc = buildAnnotatedString {
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                    append(stringResource(R.string.show_notifications_on_calendar_event))
-                }
-                append(":\n  ")
-                withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                    append(context.getString(if (notificationPermission) R.string.enabled_description else R.string.disabled_description))
-                }
-            },
-            isChecked = notificationPermission,
-            onClick = { value ->
-                if (value) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                            storage.isNotificationEnabled = true
-                            notificationPermission = true
-                        } else {
-                            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                    } else {
-                        storage.isNotificationEnabled = true
-                        notificationPermission = true
-                    }
-                } else {
-                    storage.isNotificationEnabled = false
-                    notificationPermission = false
-                }
-            }
-        )
-    }
-
 }
 
 @Composable
@@ -1195,10 +1002,16 @@ fun MainApplication(
         == PackageManager.PERMISSION_GRANTED
     ) {
         if (calPermission) {
-            CalendarAlarmReceiver.startAlarm(context)
+            CalendarAlarmReceiver.checkForEvents(context)
         } else {
             CalendarAlarmReceiver.cancelAlarm(context)
         }
+    }
+
+    // Otherwise disable all calendar related settings
+    else {
+        storage.isCalendarEnabled = false
+        calPermission = false
     }
 
     // If settings aren't enabled (specifically notifications), start by displaying the Settings screen

@@ -82,4 +82,10 @@
     <string name="events_in_next_two_weeks">Events in next two weeks:</string>
     <string name="list_events">List Events</string>
     <string name="event_repeats">This event repeats.</string>
+    <string name="calendar_permission_dialog_title">Unable to open calendar permission dialog</string>
+    <string name="calendar_permission_dialog_text">This may occur because you manually disabled calender permissions, or denied allowing them in the past. Go into the app\'s settings to enable manually.</string>
+    <string name="dismiss_button_text">Dismiss</string>
+    <string name="setting_button_text">Go to Settings</string>
+    <string name="notification_permission_dialog_title">Unable to open notification permission dialog</string>
+    <string name="notification_permission_dialog_text">This may occur because you manually disabled notification permissions, or denied allowing them in the past. Go into the app\'s settings to enable manually.</string>
 </resources>

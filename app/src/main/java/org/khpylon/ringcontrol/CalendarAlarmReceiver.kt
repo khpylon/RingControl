@@ -1,5 +1,6 @@
 package org.khpylon.ringcontrol
 
+import android.Manifest
 import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -7,6 +8,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.text.format.DateUtils
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -25,65 +27,77 @@ object CalendarConstants {
 class CalendarAlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val storage = Storage(context)
-        val time = LocalDateTime.now(ZoneId.systemDefault())
-
-        // Check to see if there are pending events
-        val events = ReadCalendars(context).findEvents(time)
-        val isCalendarEvent = !events.isEmpty()
-
-        // Determine when the next alarm should occur
-        val next = if (!isCalendarEvent) {
-            time.plusMinutes(CalendarConstants.INTERVAL)
-        } else {
-            events[0].alarmTime(time.atZone(ZoneId.systemDefault()))
-        }
-
-        storage.isPending = isCalendarEvent
-
-        // Format the time for the next alarm.
-        val dateFormatter =
-            DateTimeFormatter.ofLocalizedDate(
-                FormatStyle.SHORT
-            ).withLocale(Locale.getDefault())
-        val dateText = time.format(dateFormatter)
-        val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
-        val timeFormatter =
-            DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a")
-        val timeText = time.format(timeFormatter)
-        Log.d(Constants.LOGTAG, "This AlarmReceiver at $dateText $timeText")
-        Log.d(Constants.LOGTAG, "isCalendarEvent is $isCalendarEvent")
-
-        // If an event is active, or the user wants to see the app is active, display a notification
-        if (storage.isNotificationEnabled && events.isNotEmpty()
-            && events[0].isEventActive(time.atZone(ZoneId.systemDefault()))
-            && events[0].isNotify
-        ) {
-            val notificationManager =
-                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-            if (notificationManager.getNotificationChannel(NORMAL_NOTIFICATIONS) == null) {
-                createNotificationChannels(context)
-            }
-
-            val title = events[0].title
-            Log.d(Constants.LOGTAG, "event is '$title'")
-            val builder = NotificationCompat.Builder(context, NORMAL_NOTIFICATIONS)
-                .setSmallIcon(R.drawable.notifier_recycler)
-                .setContentTitle("Ring Control")
-                .setContentText("Ringer disabled at $dateText $timeText for calendar event \"$title\"")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            notificationManager.notify(7, builder.build())
-        }
-
-        // Set the next alarm
-        setAlarm(context, next)
+        checkForEvents(context)
     }
-
-
 
     companion object {
         private const val NORMAL_NOTIFICATIONS = "NORMAL_NOTIFICATIONS"
+
+        @JvmStatic
+        fun checkForEvents(context: Context) {
+            val storage = Storage(context)
+
+            // If the calendar access is disabled, don't do anything
+            if (context.checkSelfPermission(
+                    Manifest.permission.READ_CALENDAR
+                ) != PackageManager.PERMISSION_GRANTED ||
+                !storage.isCalendarEnabled) {
+                return
+            }
+
+            val time = LocalDateTime.now(ZoneId.systemDefault())
+
+            // Check to see if there are pending events
+            val events = ReadCalendars(context).findEvents(time)
+            val isCalendarEvent = !events.isEmpty()
+
+            // Determine when the next alarm should occur
+            val next = if (!isCalendarEvent) {
+                time.plusMinutes(CalendarConstants.INTERVAL)
+            } else {
+                events[0].alarmTime(time.atZone(ZoneId.systemDefault()))
+            }
+
+            storage.isPending = isCalendarEvent
+
+            // Format the time for the next alarm.
+            val dateFormatter =
+                DateTimeFormatter.ofLocalizedDate(
+                    FormatStyle.SHORT
+                ).withLocale(Locale.getDefault())
+            val dateText = time.format(dateFormatter)
+            val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+            val timeFormatter =
+                DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a")
+            val timeText = time.format(timeFormatter)
+            Log.d(Constants.LOGTAG, "This AlarmReceiver at $dateText $timeText")
+            Log.d(Constants.LOGTAG, "isCalendarEvent is $isCalendarEvent")
+
+            // If an event is active, or the user wants to see the app is active, display a notification
+            if (storage.isNotificationEnabled && events.isNotEmpty()
+                && events[0].isEventActive(time.atZone(ZoneId.systemDefault()))
+                && events[0].isNotify
+            ) {
+                val notificationManager =
+                    context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+                if (notificationManager.getNotificationChannel(NORMAL_NOTIFICATIONS) == null) {
+                    createNotificationChannels(context)
+                }
+
+                val title = events[0].title
+                Log.d(Constants.LOGTAG, "event is '$title'")
+                val builder = NotificationCompat.Builder(context, NORMAL_NOTIFICATIONS)
+                    .setSmallIcon(R.drawable.notifier_recycler)
+                    .setContentTitle("Ring Control")
+                    .setContentText("Ringer disabled at $dateText $timeText for calendar event \"$title\"")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                notificationManager.notify(7, builder.build())
+            }
+
+            // Set the next alarm
+            setAlarm(context, next)
+        }
 
         @JvmStatic
         fun createNotificationChannels(context: Context) {
