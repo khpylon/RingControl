@@ -88,10 +88,10 @@
     <string name="setting_button_text">Go to Settings</string>
     <string name="try_again_button_text">Try again</string>
     <string name="not_requested">Not requested</string>
-    <string name="denied">Denied</string>
-    <string name="calendar_permission_dialog_title">Unable to open calendar permission dialog</string>
-    <string name="calendar_permission_dialog_text">This may occur because you manually disabled calendar permissions, or denied allowing them in the past. Go into the app\'s settings to enable manually.</string>
-    <string name="notification_permission_dialog_title">Unable to open notification permission dialog</string>
+    <string name="denied">Denied (long press on toggle to change)</string>
+    <string name="calendar_permission_dialog_title">Unable to change calendar permission</string>
+    <string name="calendar_permission_dialog_text">This might occur because you manually disabled calendar permissions, or denied allowing them in the past. Go into the app\'s settings to enable manually.</string>
+    <string name="notification_permission_dialog_title">Unable to change notification permission</string>
     <string name="notification_permission_dialog_text">This may occur because you manually disabled notification permissions, or denied allowing them in the past. Go into the app\'s settings to enable manually.</string>
     <string name="calendar_read_permission_title">Calendar Read Permission</string>
     <string name="calendar_read_permission_text">This permission is needed for the app to scan calendar events and automatically change the mode setting.  If you only want to use the on-screen widget to control the ring mode, you can leave this permission disabled.</string>
