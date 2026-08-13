@@ -11,7 +11,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,7 +34,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 
 
 @Composable
@@ -61,8 +60,13 @@ fun WidgetPermissions(context: Context) {
         }
 
     // Can the app use calendar events
-    var calendarPermission by remember {
+    var calendarEnabled by remember {
         mutableStateOf(storage.isCalendarEnabled)
+    }
+
+    // Are caledar permissions allowed?
+    var calendarPermission by remember {
+        mutableIntStateOf(storage.calendarPermission)
     }
 
     // Is the user able to see the calendar permission dialog?
@@ -70,17 +74,18 @@ fun WidgetPermissions(context: Context) {
         mutableStateOf(false)
     }
 
-    // Is the user able to see the calendar permission dialog?
+    // Is the user able to see the calendar settings dialog?
     var calendarSettingsPopup by remember {
         mutableStateOf(false)
     }
 
-    // Request calendar permissions if necessary,
+    // Request calendar permissions
     val calendarLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())
         { isGranted ->
             if (isGranted) {
-                calendarPermission = storage.isCalendarEnabled
+                calendarEnabled = storage.isCalendarEnabled
+                storage.calendarPermission = StorageConstants.PERMISSION_GRANTED
                 CalendarAlarmReceiver.checkForEvents(context)
             } else {
                 var activity = context
@@ -88,33 +93,30 @@ fun WidgetPermissions(context: Context) {
                     if (activity is Activity) break
                     activity = activity.baseContext
                 }
-                if (ActivityCompat.shouldShowRequestPermissionRationale(activity as Activity, Manifest.permission.READ_CALENDAR)) {
-                    calendarPermissionPopup  = true
+                if (ActivityCompat.shouldShowRequestPermissionRationale(
+                        activity as Activity,
+                        Manifest.permission.READ_CALENDAR
+                    )
+                ) {
+                    calendarPermissionPopup = true
+                } else {
+                    storage.calendarPermission = StorageConstants.PERMISSION_DENIED
                 }
             }
-
-//            // If the permission is granted, immediately check for events.  If it's not, then display
-//            // the pop-up dialog: perhaps the user previously denied permission
-//            if (calendarPermission) {
-//                CalendarAlarmReceiver.checkForEvents(context)
-//            } else {
-//                calendarSettingsPopup = true
-//            }
+            calendarPermission = storage.calendarPermission
         }
-
 
     // If request for calendar permissions fails, show a dialog
     if (calendarPermissionPopup) {
         InfoDialog(
             onDismissRequest = { calendarPermissionPopup = false },
-            dialogTitle = "Calendar Read Permissions",
+            dialogTitle = stringResource(R.string.calendar_read_permission_title),
             dialogText =
                 buildAnnotatedString {
-                    append("This permission is needed for the app to scan calender events and automatically change the mode setting.  ")
-                    append("If you only want to use the on-screen widget to control the ring mode, you can leave this permission disabled.")
+                    append(stringResource(R.string.calendar_read_permission_text))
                 },
             dismissText = stringResource(R.string.dismiss_button_text),
-            confirmText = "Try again",
+            confirmText = stringResource(R.string.try_again_button_text),
             onConfirmRequest = {
                 calendarLauncher.launch(Manifest.permission.READ_CALENDAR)
                 calendarPermissionPopup = false
@@ -122,39 +124,54 @@ fun WidgetPermissions(context: Context) {
         )
     }
 
-//    // Force request of calendar permissions dialog,
-//    val calendarSettingsLauncher =
-//        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
-//        {
-//            if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
-//                calendarPermission = storage.isCalendarEnabled
-//                CalendarAlarmReceiver.checkForEvents(context)
-//            }
-//        }
+    // Force request of app settings
+    val calendarSettingsLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
+        {
+            if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
+                storage.calendarPermission = StorageConstants.PERMISSION_GRANTED
+                calendarEnabled = storage.isCalendarEnabled
+                CalendarAlarmReceiver.checkForEvents(context)
+            } else {
+                storage.calendarPermission = StorageConstants.PERMISSION_DENIED
+            }
+            calendarPermission = storage.calendarPermission
+        }
 
-//    InfoDialog(
-//        onDismissRequest = { calendarSettingsPopup = false },
-//        dialogTitle = stringResource(R.string.calendar_permission_dialog_title),
-//        dialogText =
-//            buildAnnotatedString {
-//                append(stringResource(R.string.calendar_permission_dialog_text))
-//            },
-//        dismissText = stringResource(R.string.dismiss_button_text),
-//        confirmText = stringResource(R.string.setting_button_text),
-//        onConfirmRequest = {
-//            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-//                // Create a URI pointing specifically to this app's package
-//                data = Uri.fromParts("package", packageName, null)
-//            }
-//            calendarSettingsLauncher.launch(intent)
-//            calendarSettingsPopup = false
-//        },
-//    )
-
+    if (calendarSettingsPopup) {
+        InfoDialog(
+            onDismissRequest = { calendarSettingsPopup = false },
+            dialogTitle = stringResource(R.string.calendar_permission_dialog_title),
+            dialogText =
+                buildAnnotatedString {
+                    append(stringResource(R.string.calendar_permission_dialog_text))
+                },
+            dismissText = stringResource(R.string.dismiss_button_text),
+            confirmText = stringResource(R.string.setting_button_text),
+            onConfirmRequest = {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    // Create a URI pointing specifically to this app's package
+                    data = Uri.fromParts("package", packageName, null)
+                }
+                calendarSettingsLauncher.launch(intent)
+                calendarSettingsPopup = false
+            },
+        )
+    }
 
     // Can the app use notifications for calendar events
-    var notificationPermission by remember {
+    var notificationEnabled by remember {
         mutableStateOf(storage.isNotificationEnabled)
+    }
+
+    // Are notification permissions allowed?
+    var notificationPermission by remember {
+        mutableIntStateOf(storage.notificationPermission)
+    }
+
+    // Is the user able to see the notification permission dialog?
+    var notificationPermissionPopup by remember {
+        mutableStateOf(false)
     }
 
     // Is the user able to see the app notification dialog?
@@ -165,26 +182,64 @@ fun WidgetPermissions(context: Context) {
     // Request notification permissions if necessary,
     val notificationLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())
-        {
-            storage.isNotificationEnabled = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-                    || context.checkSelfPermission(
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-            notificationPermission = storage.isNotificationEnabled
-            if (!notificationPermission) {
-                notificationSettingsPopup = true
+        { isGranted ->
+            if (isGranted) {
+                notificationEnabled = storage.isNotificationEnabled
+                storage.notificationPermission = StorageConstants.PERMISSION_GRANTED
+            } else {
+                var activity = context
+                while (activity is ContextWrapper) {
+                    if (activity is Activity) break
+                    activity = activity.baseContext
+                }
+                if (ActivityCompat.shouldShowRequestPermissionRationale(
+                        activity as Activity,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                ) {
+                    notificationPermissionPopup = true
+                } else {
+                    storage.notificationPermission = StorageConstants.PERMISSION_DENIED
+                }
             }
+            notificationPermission = storage.notificationPermission
         }
+
+    // If request for notifications permissions fails, show a dialog
+    if (notificationPermissionPopup) {
+        InfoDialog(
+            onDismissRequest = { calendarPermissionPopup = false },
+            dialogTitle = stringResource(R.string.post_notifications_permission_title),
+            dialogText =
+                buildAnnotatedString {
+                    append(stringResource(R.string.post_notifications_permission_text))
+                },
+            dismissText = stringResource(R.string.dismiss_button_text),
+            confirmText = stringResource(R.string.try_again_button_text),
+            onConfirmRequest = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                notificationPermissionPopup = false
+            },
+        )
+    }
 
     // Force request of notification permissions dialog,
     val notificationSettingsLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
-            storage.isNotificationEnabled = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-                    || context.checkSelfPermission(
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-            notificationPermission = storage.isNotificationEnabled
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                || context.checkSelfPermission(
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                storage.notificationPermission = StorageConstants.PERMISSION_GRANTED
+                notificationEnabled = storage.isNotificationEnabled
+            } else {
+                storage.notificationPermission = StorageConstants.PERMISSION_DENIED
+            }
+            notificationPermission = storage.notificationPermission
         }
 
     // If request for notification permissions fails, show a dialog
@@ -267,35 +322,40 @@ fun WidgetPermissions(context: Context) {
             }
             append(":\n  ")
             withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
-                append("Permission denied") } else
-
-                append(context.getString(if (calendarPermission) R.string.enabled_description else R.string.disabled_description))
+                append(
+                    when (calendarPermission) {
+                        StorageConstants.PERMISSION_NOT_REQUESTED -> stringResource(R.string.not_requested)
+                        StorageConstants.PERMISSION_DENIED -> stringResource(R.string.denied)
+                        else -> context.getString(if (calendarEnabled) R.string.enabled_description else R.string.disabled_description)
+                    }
+                )
             }
         },
-        isChecked = calendarPermission,
+        isChecked = calendarPermission == StorageConstants.PERMISSION_GRANTED && calendarEnabled,
         onClick = { value ->
             if (value) {
                 if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
                     storage.isCalendarEnabled = true
-                    calendarPermission = true
+                    calendarEnabled = true
                     CalendarAlarmReceiver.checkForEvents(context)
                 } else {
                     calendarLauncher.launch(Manifest.permission.READ_CALENDAR)
                 }
             } else {
                 storage.isCalendarEnabled = false
-                calendarPermission = false
+                calendarEnabled = false
                 CalendarAlarmReceiver.cancelAlarm(context)
             }
         },
         onLongClick = {
-            Toast.makeText(context,"long click", Toast.LENGTH_SHORT).show()
+            if (calendarPermission == StorageConstants.PERMISSION_DENIED) {
+                calendarSettingsPopup = true
+            }
         }
     )
 
-    // Enable/disable calendar event notifications
-    if (calendarPermission) {
+        // Enable/disable calendar event notifications
+    if (calendarEnabled) {
         OptionSwitchRow(
             tooltip = stringResource(R.string.notification_tooltip),
             desc = buildAnnotatedString {
@@ -304,28 +364,40 @@ if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageMan
                 }
                 append(":\n  ")
                 withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                    append(context.getString(if (notificationPermission) R.string.enabled_description else R.string.disabled_description))
+                    append(
+                        when (notificationPermission) {
+                            StorageConstants.PERMISSION_NOT_REQUESTED -> stringResource(R.string.not_requested)
+                            StorageConstants.PERMISSION_DENIED -> stringResource(R.string.denied)
+                            else -> context.getString(if (notificationEnabled) R.string.enabled_description else R.string.disabled_description)
+                        }
+                    )
                 }
             },
-            isChecked = notificationPermission,
+            isChecked = notificationPermission == StorageConstants.PERMISSION_GRANTED && notificationEnabled,
             onClick = { value ->
                 if (value) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                             storage.isNotificationEnabled = true
-                            notificationPermission = true
+                            notificationEnabled = true
                         } else {
                             notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         }
                     } else {
                         storage.isNotificationEnabled = true
-                        notificationPermission = true
+                        notificationEnabled = true
                     }
                 } else {
                     storage.isNotificationEnabled = false
-                    notificationPermission = false
+                    notificationEnabled = false
+                }
+            },
+            onLongClick = {
+                if (notificationPermission == StorageConstants.PERMISSION_DENIED) {
+                    notificationSettingsPopup = true
                 }
             }
+
         )
     }
 

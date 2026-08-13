@@ -173,6 +173,27 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // Update tracked state of calendar and notidication pemissions
+        if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED
+            && storage.calendarPermission == StorageConstants.PERMISSION_GRANTED )
+        {
+            storage.calendarPermission = StorageConstants.PERMISSION_NOT_REQUESTED
+        } else if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
+            && storage.calendarPermission != StorageConstants.PERMISSION_GRANTED )
+        {
+            storage.calendarPermission = StorageConstants.PERMISSION_GRANTED
+        }
+
+        if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            && storage.notificationPermission == StorageConstants.PERMISSION_GRANTED )
+        {
+            storage.notificationPermission = StorageConstants.PERMISSION_DENIED
+        } else if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            && storage.notificationPermission != StorageConstants.PERMISSION_GRANTED )
+        {
+            storage.notificationPermission = StorageConstants.PERMISSION_GRANTED
+        }
+
         enableEdgeToEdge()
         setContent {
             RingControlTheme {

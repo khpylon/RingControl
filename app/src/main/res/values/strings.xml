@@ -27,15 +27,17 @@
     <string name="battery_opts_on_description">Optimized (may cause issues)</string>
     <string name="use_calendar_events">Use calendar events</string>
     <string name="dnd_tooltip">Modes (or Do Not Disturb) access is required to change the ringer\'s status.
-        \n\nThe widget will not function if this permission is disabled.</string>
+        \n\nThe widget will not function if this permission is denied.</string>
     <string name="battery_tooltip">Unrestricted battery optimization is recommended so the
         widget will update when battery saving mode is enabled.</string>
     <string name="calendar_tooltip">Silence the ringer for specific events in your calendar. Just
         add the text #RingControl# or #RC# in the event\'s title or description
         (to use vibration instead, use #RingControl/V# or #RC/V#).
-        \n\nCalendar must be enabled in the app\'s permissions.</string>
+        \n\nCalendar must be enabled in the app\'s permissions.  If the status displays "Denied",
+        long press on the toggle to access the app\'s settings.</string>
     <string name="notification_tooltip">Show a notification when the app turns off the ringer.
-        \n\nNotifications must be enabled in the app\'s permissions.</string>
+        \n\nNotifications must be en eabled in the app\'s permissions.  If the status displays "Denied",
+        long press on the toggle to access the app\'s settings.</string>
     <string name="show_notifications_on_calendar_event">Calendar event notifications</string>
     <string name ="enabled_description">Enabled</string>
     <string name ="disabled_description">Disabled</string>
@@ -82,10 +84,17 @@
     <string name="events_in_next_two_weeks">Events in next two weeks:</string>
     <string name="list_events">List Events</string>
     <string name="event_repeats">This event repeats.</string>
-    <string name="calendar_permission_dialog_title">Unable to open calendar permission dialog</string>
-    <string name="calendar_permission_dialog_text">This may occur because you manually disabled calender permissions, or denied allowing them in the past. Go into the app\'s settings to enable manually.</string>
     <string name="dismiss_button_text">Dismiss</string>
     <string name="setting_button_text">Go to Settings</string>
+    <string name="try_again_button_text">Try again</string>
+    <string name="not_requested">Not requested</string>
+    <string name="denied">Denied</string>
+    <string name="calendar_permission_dialog_title">Unable to open calendar permission dialog</string>
+    <string name="calendar_permission_dialog_text">This may occur because you manually disabled calendar permissions, or denied allowing them in the past. Go into the app\'s settings to enable manually.</string>
     <string name="notification_permission_dialog_title">Unable to open notification permission dialog</string>
     <string name="notification_permission_dialog_text">This may occur because you manually disabled notification permissions, or denied allowing them in the past. Go into the app\'s settings to enable manually.</string>
+    <string name="calendar_read_permission_title">Calendar Read Permission</string>
+    <string name="calendar_read_permission_text">This permission is needed for the app to scan calendar events and automatically change the mode setting.  If you only want to use the on-screen widget to control the ring mode, you can leave this permission disabled.</string>
+    <string name="post_notifications_permission_title">Post Notifications Permission</string>
+    <string name="post_notifications_permission_text">This permission is needed for the app to display a notification when a calendar event changes the ring mode.  Disabling this permission has no other effect.</string>
 </resources>

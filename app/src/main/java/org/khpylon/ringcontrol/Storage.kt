@@ -23,6 +23,12 @@ object StorageConstants {
     const val INACTIVE: Int = 0
     const val SILENT: Int = 1
     const val VIBRATE: Int = 2
+    const val CALENDAR_PERMISSION: String = "calendar_permissions"
+    const val NOTIFICATION_PERMISSION: String = "notification_permissions"
+    const val PERMISSION_NOT_REQUESTED: Int = 0
+    const val PERMISSION_GRANTED: Int = 1
+    const val PERMISSION_DENIED: Int = 2
+
 }
 
 class Storage(private val context: Context) {
@@ -217,6 +223,46 @@ class Storage(private val context: Context) {
             val edit = pref.edit()
             // Store data. you may also use putFloat(), putInt(), putLong() as requirement
             edit.putBoolean(StorageConstants.PENDING, value)
+            // Commit the changes
+            commitWait(edit)
+        }
+
+    var calendarPermission: Int
+        get() {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            return pref.getInt(StorageConstants.CALENDAR_PERMISSION, StorageConstants.PERMISSION_NOT_REQUESTED)
+        }
+        set(id) {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            val edit = pref.edit()
+            // Store data. you may also use putFloat(), putInt(), putLong() as requirement
+            edit.putInt(StorageConstants.CALENDAR_PERMISSION, id)
+            // Commit the changes
+            commitWait(edit)
+        }
+
+    var notificationPermission: Int
+        get() {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            return pref.getInt(StorageConstants.NOTIFICATION_PERMISSION, StorageConstants.PERMISSION_NOT_REQUESTED)
+        }
+        set(id) {
+            val pref = context.getSharedPreferences(
+                StorageConstants.TAG,
+                Context.MODE_PRIVATE
+            )
+            val edit = pref.edit()
+            // Store data. you may also use putFloat(), putInt(), putLong() as requirement
+            edit.putInt(StorageConstants.NOTIFICATION_PERMISSION, id)
             // Commit the changes
             commitWait(edit)
         }
