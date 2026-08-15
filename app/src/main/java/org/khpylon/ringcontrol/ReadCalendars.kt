@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.media.AudioManager
+import android.os.PowerManager
 import android.provider.CalendarContract
 import android.text.format.DateUtils
 import android.util.Log

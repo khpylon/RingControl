@@ -282,7 +282,7 @@ fun WidgetPermissions(context: Context) {
             withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                 append(context.getString(R.string.dnd_permissions))
             }
-            append(":\n  ")
+            append("\n  Status: ")
             withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
                 append(context.getString(if (modesAccessPermission) R.string.enabled_description else R.string.disabled_description))
             }
@@ -294,33 +294,14 @@ fun WidgetPermissions(context: Context) {
         }
     )
 
-    // Toggle control for battery optimization
-    OptionSwitchRow(
-        tooltip = stringResource(R.string.battery_tooltip),
-        desc = buildAnnotatedString {
-            withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                append(context.getString(R.string.battery_opt))
-            }
-            append(":\n  ")
-            withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description))
-            }
-        },
-        isChecked = batteryOptimized,
-        onClick = {
-            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-            batteryLauncher.launch(intent)
-        }
-    )
-
-    // Enable/disable calendar usage
+    // Toggle for calendar usage
     OptionSwitchRow(
         tooltip = stringResource(R.string.calendar_tooltip),
         desc = buildAnnotatedString {
             withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                 append(context.getString(R.string.use_calendar_events))
             }
-            append(":\n  ")
+            append("\n  Status: ")
             withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
                 append(
                     when (calendarPermission) {
@@ -354,15 +335,34 @@ fun WidgetPermissions(context: Context) {
         }
     )
 
-        // Enable/disable calendar event notifications
     if (calendarEnabled) {
+        // Toggle control for battery optimization
+        OptionSwitchRow(
+            tooltip = stringResource(R.string.battery_tooltip),
+            desc = buildAnnotatedString {
+                withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                    append(context.getString(R.string.battery_opt))
+                }
+                append("\n  Status: ")
+                withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
+                    append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description))
+                }
+            },
+            isChecked = batteryOptimized,
+            onClick = {
+                val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                batteryLauncher.launch(intent)
+            }
+        )
+
+        // Toggle for calendar event notifications
         OptionSwitchRow(
             tooltip = stringResource(R.string.notification_tooltip),
             desc = buildAnnotatedString {
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                     append(stringResource(R.string.show_notifications_on_calendar_event))
                 }
-                append(":\n  ")
+                append("\n  Status: ")
                 withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
                     append(
                         when (notificationPermission) {

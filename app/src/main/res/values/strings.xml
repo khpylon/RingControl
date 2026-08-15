@@ -23,20 +23,20 @@
     <string name="dismiss_button">Dismiss</string>
     <string name="sample_mode_label">Label</string>
     <string name="battery_opt">Battery optimization</string>
-    <string name="battery_opts_off_description">Unrestricted (recommended)</string>
-    <string name="battery_opts_on_description">Optimized (may cause issues)</string>
+    <string name="battery_opts_off_description">Unrestricted (required)</string>
+    <string name="battery_opts_on_description">Optimized (calendar events ignored)</string>
     <string name="use_calendar_events">Use calendar events</string>
     <string name="dnd_tooltip">Modes (or Do Not Disturb) access is required to change the ringer\'s status.
         \n\nThe widget will not function if this permission is denied.</string>
-    <string name="battery_tooltip">Unrestricted battery optimization is recommended so the
-        widget will update when battery saving mode is enabled.</string>
+    <string name="battery_tooltip">Unrestricted battery optimization is required to update the
+        widget when battery saving mode is enabled, and to react to calendar events in the background.</string>
     <string name="calendar_tooltip">Silence the ringer for specific events in your calendar. Just
         add the text #RingControl# or #RC# in the event\'s title or description
         (to use vibration instead, use #RingControl/V# or #RC/V#).
-        \n\nCalendar must be enabled in the app\'s permissions.  If the status displays "Denied",
+        \n\nCalendar must be enabled in the app\'s permissions.  If the status shows "Denied",
         long press on the toggle to access the app\'s settings.</string>
     <string name="notification_tooltip">Show a notification when the app turns off the ringer.
-        \n\nNotifications must be en eabled in the app\'s permissions.  If the status displays "Denied",
+        \n\nNotifications must be en enabled in the app\'s permissions.  If the status dhows "Denied",
         long press on the toggle to access the app\'s settings.</string>
     <string name="show_notifications_on_calendar_event">Calendar event notifications</string>
     <string name ="enabled_description">Enabled</string>
@@ -48,14 +48,15 @@
     <string name="tooltip_help">Press and hold a description for more information.</string>
     <string name="current_ring_state_icon">Current ring state icon</string>
     <string name="using_the_widget_title">Using the widget</string>
-    <string name="using_the_widget_instructions_part1">"First, enable permissions for modes access and unrestricted battery optimization (you can do this within the app by clicking on "</string>
+    <string name="using_the_widget_instructions_part1">"First, enable permissions for modes access
+        (you can do this within the app by clicking on "</string>
     <string name="using_the_widget_instructions_part2">Second, be sure to place a widget on your
         home screen. Once you\'ve done this, just tap the widget to change the ring mode. The
         widget will show which mode is active (normal, vibrate, or silent).</string>
     <string name="using_calendar_title">Controlling the ring state with calendar events</string>
-    <string name="using_calendar_part1">If you want your phone to enter Do Not Disturb mode during an
-        event in your Google calendar, add either #RingControl# or #RC# to the event\'s title or
-        description. To use vibration instead, use #RingControl/V# or #RC/V#.
+    <string name="using_calendar_part1">If you want your phone to enter modify the ring mode during
+        events in your Google calendar, add either #RingControl# or #RC# to the event\'s title or
+        description. To use vibration only, use #RingControl/V# or #RC/V#.
         To receive a notification when an event starts, use #RingControl/N# or #RC/N#.
         To change the mode earlier prior to an event, use #RingControl/+X# or #RC/+X#
         where "X" is the number of minutes (up to 15 minutes).  Options can be combined.
@@ -64,10 +65,11 @@
         (or by the amount specified in the "/+X" option), and revert back to the original
         setting after the event. Events must be less than 24 hours, and cannot be all-day.
     </string>
-    <string name="using_calendar_part2">Remember, you need to give the app permission to read your
-        calendar. If you did not do this when you first ran the app, do the following: go to
-        Settings, go to Apps, find the Ring Control App, and under Permissions set Calendar to
-        allowed.</string>
+    <string name="using_calendar_part2">Remember, the app needs unrestricted battery access in the
+        background. It also needs permission to read your calendar. Similarly,
+        the app needs permission to send notifications if you choose to use that feature.
+        If you did not initially grant these permissions, long press on the toggle to open the
+        Settings menu and allow them.  </string>
     <string name="about_the_app_title">About The App</string>
     <string name="about_more_info">Bug report or feature requests? Go to
         https://github.com/khpylon/RingControl</string>
@@ -78,11 +80,11 @@
     <string name="app_usage_menu">App Usage</string>
     <string name="release_notes_menu">Release Notes</string>
     <string name="about_menu">About</string>
+    <string name="list_events">List Events</string>
     <string name="channel_description">General information from the app</string>
     <string name="channel_name">Informational</string>
     <string name="app_version">"App version "</string>
     <string name="events_in_next_two_weeks">Events in next two weeks:</string>
-    <string name="list_events">List Events</string>
     <string name="event_repeats">This event repeats.</string>
     <string name="dismiss_button_text">Dismiss</string>
     <string name="setting_button_text">Go to Settings</string>

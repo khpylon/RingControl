@@ -12,6 +12,7 @@ import android.icu.text.MessageFormat
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
@@ -95,6 +96,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import androidx.glance.text.TextStyle
 import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
@@ -256,6 +258,18 @@ class MainActivity : ComponentActivity() {
                                         modifier = Modifier
                                             .padding(8.dp)
                                     )
+
+                                    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                                    if (!pm.isIgnoringBatteryOptimizations(context.packageName)) {
+                                        Text(
+//                                            stringResource(R.string.events_in_next_two_weeks),
+                                            text = "Note: calender events are ignored due to optimized battery background usage.",
+                                            fontSize = 12.sp,
+                                            color = Color.Red,
+                                            modifier = Modifier
+                                                .padding(8.dp)
+                                        )
+                                    }
 
                                     // List of events
                                     LazyColumn(
@@ -545,6 +559,20 @@ fun AppMenu(
         onDismissRequest = { displayMenu = false },
     ) {
         // Add in each menu item
+        DropdownMenuItem(
+            onClick = {
+                displayMenu = false
+                onClick(context.getString(R.string.release_notes_menu))
+            },
+            text = { Text(text = stringResource(R.string.release_notes_menu)) }
+        )
+        DropdownMenuItem(
+            onClick = {
+                displayMenu = false
+                onClick(context.getString(R.string.app_usage_menu))
+            },
+            text = { Text(text = stringResource(R.string.app_usage_menu)) }
+        )
         if (storage.isCalendarEnabled) {
             DropdownMenuItem(
                 onClick = {
@@ -554,20 +582,6 @@ fun AppMenu(
                 text = { Text(text = stringResource(R.string.list_events)) }
             )
         }
-        DropdownMenuItem(
-            onClick = {
-                displayMenu = false
-                onClick(context.getString(R.string.app_usage_menu))
-            },
-            text = { Text(text = stringResource(R.string.app_usage_menu)) }
-        )
-        DropdownMenuItem(
-            onClick = {
-                displayMenu = false
-                onClick(context.getString(R.string.release_notes_menu))
-            },
-            text = { Text(text = stringResource(R.string.release_notes_menu)) }
-        )
         DropdownMenuItem(
             onClick = {
                 displayMenu = false

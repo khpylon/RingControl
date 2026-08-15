@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.PowerManager
 import android.text.format.DateUtils
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -121,6 +122,14 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
 
         @JvmStatic
         fun setAlarm(context: Context, next: LocalDateTime) {
+
+            // If battery optimizations are enabled, we can't change the ringer mode.
+            val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(context.packageName)) {
+                Log.d(Constants.LOGTAG, "Bypassing calendar alarms due to battery restrictions.")
+                return
+            }
+
             val dateFormatter = DateTimeFormatter.ofLocalizedDate(
                 FormatStyle.SHORT
             ).withLocale(Locale.getDefault())
@@ -144,6 +153,7 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
                 pendingIntent
             )
         }
+
         @JvmStatic
         fun startAlarm(context: Context) {
             val intent = Intent(context, CalendarAlarmReceiver::class.java)
