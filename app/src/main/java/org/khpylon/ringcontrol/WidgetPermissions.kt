@@ -74,11 +74,6 @@ fun WidgetPermissions(context: Context) {
         mutableStateOf(false)
     }
 
-    // Is the user able to see the calendar settings dialog?
-    var calendarSettingsPopup by remember {
-        mutableStateOf(false)
-    }
-
     // Request calendar permissions
     val calendarLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())
@@ -106,24 +101,6 @@ fun WidgetPermissions(context: Context) {
             calendarPermission = storage.calendarPermission
         }
 
-    // If request for calendar permissions fails, show a dialog
-    if (calendarPermissionPopup) {
-        InfoDialog(
-            onDismissRequest = { calendarPermissionPopup = false },
-            dialogTitle = stringResource(R.string.calendar_read_permission_title),
-            dialogText =
-                buildAnnotatedString {
-                    append(stringResource(R.string.calendar_read_permission_text))
-                },
-            dismissText = stringResource(R.string.dismiss_button_text),
-            confirmText = stringResource(R.string.try_again_button_text),
-            onConfirmRequest = {
-                calendarLauncher.launch(Manifest.permission.READ_CALENDAR)
-                calendarPermissionPopup = false
-            },
-        )
-    }
-
     // Force request of app settings
     val calendarSettingsLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult())
@@ -138,27 +115,6 @@ fun WidgetPermissions(context: Context) {
             calendarPermission = storage.calendarPermission
         }
 
-    if (calendarSettingsPopup) {
-        InfoDialog(
-            onDismissRequest = { calendarSettingsPopup = false },
-            dialogTitle = stringResource(R.string.calendar_permission_dialog_title),
-            dialogText =
-                buildAnnotatedString {
-                    append(stringResource(R.string.calendar_permission_dialog_text))
-                },
-            dismissText = stringResource(R.string.dismiss_button_text),
-            confirmText = stringResource(R.string.setting_button_text),
-            onConfirmRequest = {
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    // Create a URI pointing specifically to this app's package
-                    data = Uri.fromParts("package", packageName, null)
-                }
-                calendarSettingsLauncher.launch(intent)
-                calendarSettingsPopup = false
-            },
-        )
-    }
-
     // Can the app use notifications for calendar events
     var notificationEnabled by remember {
         mutableStateOf(storage.isNotificationEnabled)
@@ -171,11 +127,6 @@ fun WidgetPermissions(context: Context) {
 
     // Is the user able to see the notification permission dialog?
     var notificationPermissionPopup by remember {
-        mutableStateOf(false)
-    }
-
-    // Is the user able to see the app notification dialog?
-    var notificationSettingsPopup by remember {
         mutableStateOf(false)
     }
 
@@ -241,27 +192,6 @@ fun WidgetPermissions(context: Context) {
             }
             notificationPermission = storage.notificationPermission
         }
-
-    // If request for notification permissions fails, show a dialog
-    if (notificationSettingsPopup) {
-        InfoDialog(
-            onDismissRequest = { notificationSettingsPopup = false },
-            dialogTitle = stringResource(R.string.notification_permission_dialog_title),
-            dialogText =
-                buildAnnotatedString {
-                    append(stringResource(R.string.notification_permission_dialog_text))
-                },
-            dismissText = stringResource(R.string.dismiss_button_text),
-            confirmText = stringResource(R.string.setting_button_text),
-            onConfirmRequest = {
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    data = Uri.fromParts("package", packageName, null)
-                }
-                notificationSettingsLauncher.launch(intent)
-                notificationSettingsPopup = false
-            },
-        )
-    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -330,7 +260,11 @@ fun WidgetPermissions(context: Context) {
         },
         onLongClick = {
             if (calendarPermission == StorageConstants.PERMISSION_DENIED) {
-                calendarSettingsPopup = true
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    // Create a URI pointing specifically to this app's package
+                    data = Uri.fromParts("package", packageName, null)
+                }
+                calendarSettingsLauncher.launch(intent)
             }
         }
     )
@@ -394,7 +328,10 @@ fun WidgetPermissions(context: Context) {
             },
             onLongClick = {
                 if (notificationPermission == StorageConstants.PERMISSION_DENIED) {
-                    notificationSettingsPopup = true
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", packageName, null)
+                    }
+                    notificationSettingsLauncher.launch(intent)
                 }
             }
 

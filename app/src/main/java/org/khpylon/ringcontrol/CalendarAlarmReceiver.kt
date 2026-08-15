@@ -43,6 +43,14 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
                     Manifest.permission.READ_CALENDAR
                 ) != PackageManager.PERMISSION_GRANTED ||
                 !storage.isCalendarEnabled) {
+                Log.d(Constants.LOGTAG, "Bypassing calendar checks due to calendar restrictions.")
+                return
+            }
+
+            // If battery optimizations are enabled, we can't change the ringer mode.
+            val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(context.packageName)) {
+                Log.d(Constants.LOGTAG, "Bypassing calendar checks due to battery restrictions.")
                 return
             }
 
