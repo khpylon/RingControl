@@ -1,5 +1,7 @@
 package org.khpylon.ringcontrol
 
+import android.app.Activity
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.AUDIO_SERVICE
 import android.graphics.Bitmap
@@ -126,7 +128,7 @@ class GlanceWidget : GlanceAppWidget() {
                 val textCanvas = Canvas(textBmp)
 
                 // Set text attributes
-                paint.setColor(Color.White.toArgb())
+                paint.color = Color.White.toArgb()
                 paint.textSize = 32f // Set text size in pixels
                 paint.isAntiAlias = true // Smooth the text edges
                 paint.textAlign = Paint.Align.CENTER
@@ -221,12 +223,20 @@ class GlanceWidgetCallback : ActionCallback {
         updateAppWidgetState(context, glanceId) { prefs ->
             val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
             val currentMode = audioManager.ringerMode
-            val nextMode =
+            var nextMode =
                 when (currentMode) {
                     AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_SILENT
                     AudioManager.RINGER_MODE_SILENT -> AudioManager.RINGER_MODE_VIBRATE
                     else -> AudioManager.RINGER_MODE_NORMAL
                 }
+
+            if (nextMode == AudioManager.RINGER_MODE_SILENT) {
+                val notificationManager =
+                    context.getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
+                if (!notificationManager.isNotificationPolicyAccessGranted) {
+                    nextMode = AudioManager.RINGER_MODE_VIBRATE
+                }
+            }
 
             val lastState = prefs[GlanceWidget.updateKey] ?: false
             audioManager.ringerMode = nextMode

@@ -79,7 +79,7 @@ fun WidgetPermissions(context: Context) {
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())
         { isGranted ->
             if (isGranted) {
-                calendarEnabled = storage.isCalendarEnabled
+                storage.isCalendarEnabled = true
                 storage.calendarPermission = StorageConstants.PERMISSION_GRANTED
                 CalendarAlarmReceiver.checkForEvents(context)
             } else {
@@ -98,6 +98,7 @@ fun WidgetPermissions(context: Context) {
                     storage.calendarPermission = StorageConstants.PERMISSION_DENIED
                 }
             }
+            calendarEnabled = storage.isCalendarEnabled
             calendarPermission = storage.calendarPermission
         }
 
@@ -115,7 +116,13 @@ fun WidgetPermissions(context: Context) {
             calendarPermission = storage.calendarPermission
         }
 
-    // Can the app use notifications for calendar events
+    // Notification permissions not needed prior to Android 33
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        storage.notificationPermission = StorageConstants.PERMISSION_GRANTED
+        storage.isNotificationEnabled = true
+    }
+
+        // Can the app use notifications for calendar events
     var notificationEnabled by remember {
         mutableStateOf(storage.isNotificationEnabled)
     }
@@ -135,7 +142,7 @@ fun WidgetPermissions(context: Context) {
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())
         { isGranted ->
             if (isGranted) {
-                notificationEnabled = storage.isNotificationEnabled
+                storage.isNotificationEnabled = true
                 storage.notificationPermission = StorageConstants.PERMISSION_GRANTED
             } else {
                 var activity = context
@@ -153,6 +160,7 @@ fun WidgetPermissions(context: Context) {
                     storage.notificationPermission = StorageConstants.PERMISSION_DENIED
                 }
             }
+            notificationEnabled = storage.isNotificationEnabled
             notificationPermission = storage.notificationPermission
         }
 
@@ -205,12 +213,26 @@ fun WidgetPermissions(context: Context) {
         )
     }
 
+    val dndLabel = context.getString (
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA)
+            R.string.dnd_permissions
+        else
+            R.string.mode_access_permissions
+    )
+    val dndTooltip = context.getString (
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA)
+            R.string.dnd_permissions
+        else
+            R.string.modeaccess_tooltip
+    )
+
+
     // Toggle control for DND permissions
     OptionSwitchRow(
         tooltip = stringResource(R.string.dnd_tooltip),
         desc = buildAnnotatedString {
             withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                append(context.getString(R.string.dnd_permissions))
+                append(dndLabel)
             }
             append("\n  Status: ")
             withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
@@ -269,17 +291,41 @@ fun WidgetPermissions(context: Context) {
         }
     )
 
+    // If calendar isn't enabled, these aren't relevant
     if (calendarEnabled) {
+
+        // Get correct descriptions based on build version
+        val batteryDisableLabel = context.getString (
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM)
+                R.string.optimize_description
+            else
+                R.string.optimized_description
+        )
+
+        val batteryEnableLabel = context.getString (
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM)
+                R.string.dont_optimize_description
+            else
+                R.string.unrestricted_description
+        )
+
+        val batteryTooltip = context.getString (
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM)
+                R.string.dont_optimize_battery_tooltip
+            else
+                R.string.unrestricted_battery_tooltip
+        )
+
         // Toggle control for battery optimization
         OptionSwitchRow(
-            tooltip = stringResource(R.string.battery_tooltip),
+            tooltip = stringResource(R.string.dont_optimize_battery_tooltip),
             desc = buildAnnotatedString {
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                     append(context.getString(R.string.battery_opt))
                 }
                 append("\n  Status: ")
                 withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                    append(context.getString(if (batteryOptimized) R.string.battery_opts_off_description else R.string.battery_opts_on_description))
+                    append(if (batteryOptimized) batteryEnableLabel else batteryDisableLabel)
                 }
             },
             isChecked = batteryOptimized,
@@ -289,28 +335,28 @@ fun WidgetPermissions(context: Context) {
             }
         )
 
-        // Toggle for calendar event notifications
-        OptionSwitchRow(
-            tooltip = stringResource(R.string.notification_tooltip),
-            desc = buildAnnotatedString {
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                    append(stringResource(R.string.show_notifications_on_calendar_event))
-                }
-                append("\n  Status: ")
-                withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                    append(
-                        when (notificationPermission) {
-                            StorageConstants.PERMISSION_NOT_REQUESTED -> stringResource(R.string.not_requested)
-                            StorageConstants.PERMISSION_DENIED -> stringResource(R.string.denied)
-                            else -> context.getString(if (notificationEnabled) R.string.enabled_description else R.string.disabled_description)
-                        }
-                    )
-                }
-            },
-            isChecked = notificationPermission == StorageConstants.PERMISSION_GRANTED && notificationEnabled,
-            onClick = { value ->
-                if (value) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Toggle for calendar event notifications
+            OptionSwitchRow(
+                tooltip = stringResource(R.string.notification_tooltip),
+                desc = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                        append(stringResource(R.string.show_notifications_on_calendar_event))
+                    }
+                    append("\n  Status: ")
+                    withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
+                        append(
+                            when (notificationPermission) {
+                                StorageConstants.PERMISSION_NOT_REQUESTED -> stringResource(R.string.not_requested)
+                                StorageConstants.PERMISSION_DENIED -> stringResource(R.string.denied)
+                                else -> context.getString(if (notificationEnabled) R.string.enabled_description else R.string.disabled_description)
+                            }
+                        )
+                    }
+                },
+                isChecked = notificationPermission == StorageConstants.PERMISSION_GRANTED && notificationEnabled,
+                onClick = { value ->
+                    if (value) {
                         if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                             storage.isNotificationEnabled = true
                             notificationEnabled = true
@@ -318,24 +364,21 @@ fun WidgetPermissions(context: Context) {
                             notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         }
                     } else {
-                        storage.isNotificationEnabled = true
-                        notificationEnabled = true
+                        storage.isNotificationEnabled = false
+                        notificationEnabled = false
                     }
-                } else {
-                    storage.isNotificationEnabled = false
-                    notificationEnabled = false
-                }
-            },
-            onLongClick = {
-                if (notificationPermission == StorageConstants.PERMISSION_DENIED) {
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", packageName, null)
+                },
+                onLongClick = {
+                    if (notificationPermission == StorageConstants.PERMISSION_DENIED) {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", packageName, null)
+                        }
+                        notificationSettingsLauncher.launch(intent)
                     }
-                    notificationSettingsLauncher.launch(intent)
                 }
-            }
 
-        )
+            )
+        }
     }
 
 }

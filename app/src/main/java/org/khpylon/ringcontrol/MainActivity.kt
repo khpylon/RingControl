@@ -96,7 +96,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
-import androidx.glance.text.TextStyle
 import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
@@ -115,6 +114,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 // Thanks to https://stackoverflow.com/questions/67768746
 private inline fun Modifier.applyIf(
@@ -175,7 +175,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Update tracked state of calendar and notidication pemissions
+        // Update tracked state of calendar and notification permissions
         if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED
             && storage.calendarPermission == StorageConstants.PERMISSION_GRANTED )
         {
@@ -259,7 +259,7 @@ class MainActivity : ComponentActivity() {
                                             .padding(8.dp)
                                     )
 
-                                    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                                    val pm = context.getSystemService(POWER_SERVICE) as PowerManager
                                     if (!pm.isIgnoringBatteryOptimizations(context.packageName)) {
                                         Text(
 //                                            stringResource(R.string.events_in_next_two_weeks),
@@ -353,7 +353,7 @@ class MainActivity : ComponentActivity() {
                                                         DateTimeFormatter.ofLocalizedDate(
                                                             FormatStyle.SHORT
                                                         )
-                                                            .withLocale(Locale.getDefault())
+                                                            .withLocale(LocalLocale.current.platformLocale)
                                                     val is24Hour =
                                                         android.text.format.DateFormat.is24HourFormat(
                                                             context
@@ -1049,8 +1049,15 @@ fun MainApplication(
         calPermission = false
     }
 
-    // If settings aren't enabled (specifically notifications), start by displaying the Settings screen
-    var showSettings by rememberSaveable { mutableStateOf(!notificationManager.isNotificationPolicyAccessGranted) }
+
+    // If most settings aren't enabled, start by displaying the Settings screen
+    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    val batteryOptimized = pm.isIgnoringBatteryOptimizations(context.packageName)
+    val readCalendar = context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
+    var showSettings by rememberSaveable { mutableStateOf(
+        !notificationManager.isNotificationPolicyAccessGranted && !readCalendar
+        && !batteryOptimized
+    ) }
 
     var showText by rememberSaveable { mutableStateOf(storage.textDescription) }
 

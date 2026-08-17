@@ -4,7 +4,6 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
     <ImageView
-        android:id="@+id/background"
         android:layout_marginTop="3dp"
         android:layout_width="20dp"
         android:layout_height="30dp"
@@ -14,7 +13,6 @@
         />
 
     <ImageView
-        android:id="@+id/text"
         android:layout_marginTop="3dp"
         android:layout_width="20dp"
         android:layout_height="30dp"
@@ -24,7 +22,6 @@
         />
 
     <ImageView
-        android:id="@+id/logo"
         android:layout_marginTop="5dp"
         android:layout_marginStart="2dp"
         android:layout_width="16dp"

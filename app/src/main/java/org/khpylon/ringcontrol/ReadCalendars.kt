@@ -2,6 +2,8 @@ package org.khpylon.ringcontrol
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.NotificationManager
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
@@ -9,7 +11,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.media.AudioManager
-import android.os.PowerManager
 import android.provider.CalendarContract
 import android.text.format.DateUtils
 import android.util.Log
@@ -35,10 +36,10 @@ internal constructor(private val mContext: Context) {
         val matcher = pattern.matcher(string)
         return if (matcher.find()) {
             if (matcher.groupCount() == 1) {
-                return DND_ANNOTATION
+                DND_ANNOTATION
             } else {
                 val substring = matcher.group(2)!!.lowercase()
-                return if (substring.contains("n") && substring.contains("v")) {
+                if (substring.contains("n") && substring.contains("v")) {
                     VIBRATE_NOTIFY_ANNOTATION
                 } else if (substring.contains("v")) {
                     VIBRATE_ANNOTATION
@@ -199,6 +200,10 @@ internal constructor(private val mContext: Context) {
         // Check calendars for events in the next 30 minutes.
         val events = readCalendar(now, 30L, 2)
 
+        // See if app has permission to use DnD
+        val notificationManager = mContext.getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
+        val modesAccessPermission = notificationManager.isNotificationPolicyAccessGranted
+
         // If we ARE NOT currently handling an event.....
         if (appInfo.appState == StorageConstants.INACTIVE) {
             // If the first event is happening, become active and silence ringer
@@ -214,11 +219,11 @@ internal constructor(private val mContext: Context) {
 
                 // set the app state
                 appInfo.appState =
-                    if (events[0].isVibrate) StorageConstants.VIBRATE else StorageConstants.SILENT
+                    if (events[0].isVibrate || !modesAccessPermission) StorageConstants.VIBRATE else StorageConstants.SILENT
 
                 // modify the ringer and remember its value
                 val ringerMode =
-                    if (events[0].isVibrate) AudioManager.RINGER_MODE_VIBRATE else AudioManager.RINGER_MODE_SILENT
+                    if (events[0].isVibrate || !modesAccessPermission) AudioManager.RINGER_MODE_VIBRATE else AudioManager.RINGER_MODE_SILENT
                 changeRinger(ringerMode)
 
                 val endTime = events[0].endTime
@@ -286,11 +291,11 @@ internal constructor(private val mContext: Context) {
 
                     // set the app state
                     appInfo.appState =
-                        if (events[0].isVibrate) StorageConstants.VIBRATE else StorageConstants.SILENT
+                        if (events[0].isVibrate || !modesAccessPermission) StorageConstants.VIBRATE else StorageConstants.SILENT
 
                     // modify the ringer and remember its value
                     val ringerMode =
-                        if (events[0].isVibrate) AudioManager.RINGER_MODE_VIBRATE else AudioManager.RINGER_MODE_SILENT
+                        if (events[0].isVibrate || !modesAccessPermission) AudioManager.RINGER_MODE_VIBRATE else AudioManager.RINGER_MODE_SILENT
                     changeRinger(ringerMode)
 
                     val endTime = events[0].endTime

@@ -4,32 +4,37 @@
     <string name="app_explanation">This application allows your phone\'s ring mode to be
         changed using a widget or by events in your calendars.
         For more info, see the three-dot menu.</string>
-    <string name="dnd_permissions">\"Modes access\" permission</string>
-    <string name="ringer">Ringer</string>
+    <string name="dnd_permissions">Do Not Disturb permission</string>
+    <string name="mode_access_permissions">Modes access permission</string>
+    <string name="battery_optimization_permissions">App battery usage</string>
+    <string name="optimize_description">Optimize (calendar ignored)</string>
+    <string name="dont_optimize_description">Don\'t optimize (required)</string>
+    <string name="unrestricted_description">Unrestricted (required)</string>
+    <string name="optimized_description">Optimized (calendar ignored)</string>
     <string name="background_string">Background color</string>
     <string name="foreground_string">Icon color</string>
     <string name="normal_description">Normal</string>
     <string name="vibrate_description">Vibrate</string>
     <string name="silent_description">Silent</string>
-    <string name="ringer_description">Ringer</string>
     <string name="changes_saved">Widget changes saved.</string>
     <string name="logcat_crashfile_formatstring">Logcat crash file \"{0}.txt\" copied to Download folder.</string>
     <string name="whats_new">"What's new in "</string>
-    <string name="visible_description">Visible description</string>
     <string name="enable_mode_description">Enable mode description</string>
     <string name="widget_size">Widget size</string>
     <string name="save_button">Save</string>
     <string name="reset_button">Reset</string>
-    <string name="dismiss_button">Dismiss</string>
-    <string name="sample_mode_label">Label</string>
     <string name="battery_opt">Battery optimization</string>
-    <string name="battery_opts_off_description">Unrestricted (required)</string>
-    <string name="battery_opts_on_description">Optimized (calendar events ignored)</string>
     <string name="use_calendar_events">Use calendar events</string>
-    <string name="dnd_tooltip">Modes (or Do Not Disturb) access is required to change the ringer\'s status.
-        \n\nThe widget will not function if this permission is denied.</string>
-    <string name="battery_tooltip">Unrestricted battery optimization is required to update the
+    <string name="dnd_tooltip">Do Not Disturb permission is required to silence the ringer\'s status.
+        \n\nWithout it, the mode can only be changed to vibrate.</string>
+    <string name="modeaccess_tooltip">Modes Access permission is required to silence the ringer\'s status.
+        \n\nWithout it, the mode can only be changed to vibrate.</string>
+    <string name="dont_optimize_battery_tooltip">Battery optimization must be turned off update the
         widget when battery saving mode is enabled, and to react to calendar events in the background.</string>
+    <string name="unrestricted_battery_tooltip">Unrestricted battery usage is required to update the
+        widget when battery saving mode is enabled, and to react to calendar events in the background.
+        To activate this, you must (1) enable \"Allow background usage\", and then (2) tap that text and
+        select \"Unrestricted\".</string>
     <string name="calendar_tooltip">Silence the ringer for specific events in your calendar. Just
         add the text #RingControl# or #RC# in the event\'s title or description
         (to use vibration instead, use #RingControl/V# or #RC/V#).
@@ -41,15 +46,14 @@
     <string name="show_notifications_on_calendar_event">Calendar event notifications</string>
     <string name ="enabled_description">Enabled</string>
     <string name ="disabled_description">Disabled</string>
-    <string name="visible_desc_tooltip">Enable to display text below the widget.</string>
     <string name="mode_desc_tooltip">Enable to display the ring state in the text below the widget.</string>
     <string name="permission_settings">Switch to permission settings.</string>
     <string name="widget_controls">Switch to widget appearance controls.</string>
     <string name="tooltip_help">Press and hold a description for more information.</string>
     <string name="current_ring_state_icon">Current ring state icon</string>
     <string name="using_the_widget_title">Using the widget</string>
-    <string name="using_the_widget_instructions_part1">"First, enable permissions for modes access
-        (you can do this within the app by clicking on "</string>
+    <string name="using_the_widget_instructions_part1">"First, enable permissions for Do Not Disturb
+        or Modes access to allow the ringer to be silenced (you can do this within the app by clicking on "</string>
     <string name="using_the_widget_instructions_part2">Second, be sure to place a widget on your
         home screen. Once you\'ve done this, just tap the widget to change the ring mode. The
         widget will show which mode is active (normal, vibrate, or silent).</string>
@@ -63,9 +67,9 @@
         Options should be entered at least one hour prior to the event\'s start.
         The mode will change approximately one minute prior to the event\'s start
         (or by the amount specified in the "/+X" option), and revert back to the original
-        setting after the event. Events must be less than 24 hours, and cannot be all-day.
+        setting after the event. Events must be less than 24 hours in length, and cannot be all-day.
     </string>
-    <string name="using_calendar_part2">Remember, the app needs unrestricted battery access in the
+    <string name="using_calendar_part2">Remember, the app needs access to the battery in the
         background. It also needs permission to read your calendar. Similarly,
         the app needs permission to send notifications if you choose to use that feature.
         If you did not initially grant these permissions, long press on the toggle to open the
@@ -90,8 +94,6 @@
     <string name="try_again_button_text">Try again</string>
     <string name="not_requested">Not requested</string>
     <string name="denied">Denied (long press on toggle to change)</string>
-    <string name="calendar_permission_dialog_title">Unable to change calendar permission</string>
-    <string name="calendar_permission_dialog_text">This might occur because you manually disabled calendar permissions, or denied allowing them in the past. Go into the app\'s settings to enable manually.</string>
     <string name="post_notifications_permission_title">Post Notifications Permission</string>
     <string name="post_notifications_permission_text">This permission is needed for the app to display a notification when a calendar event changes the ring mode.  Disabling this permission has no other effect.</string>
 </resources>

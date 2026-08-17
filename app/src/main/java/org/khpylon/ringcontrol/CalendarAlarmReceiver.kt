@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.os.PowerManager
 import android.text.format.DateUtils
 import android.util.Log
@@ -18,7 +19,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Date
 import java.util.Locale
 
 object CalendarConstants {
@@ -160,22 +160,6 @@ class CalendarAlarmReceiver : BroadcastReceiver() {
                 DateUtils.SECOND_IN_MILLIS * 5,
                 pendingIntent
             )
-        }
-
-        @JvmStatic
-        fun startAlarm(context: Context) {
-            val intent = Intent(context, CalendarAlarmReceiver::class.java)
-            val pendingIntent =
-                PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            alarmManager.setWindow(
-                AlarmManager.RTC_WAKEUP,
-                Date().time + 5 * DateUtils.SECOND_IN_MILLIS,
-                DateUtils.SECOND_IN_MILLIS,
-                pendingIntent
-            )
-            Log.d(Constants.LOGTAG, "starting alarm")
         }
 
         @JvmStatic
