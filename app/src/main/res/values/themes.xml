@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.RingControl" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white95percent</item>
+        <item name="postSplashScreenTheme">@style/Theme.RingControl</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/app_logo</item>
+    </style>
 </resources>

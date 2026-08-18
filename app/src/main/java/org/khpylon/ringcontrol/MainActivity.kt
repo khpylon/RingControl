@@ -115,6 +115,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 import androidx.compose.ui.platform.LocalLocale
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 // Thanks to https://stackoverflow.com/questions/67768746
 private inline fun Modifier.applyIf(
@@ -134,6 +135,12 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        installSplashScreen().apply {
+            setKeepOnScreenCondition {
+                false
+            }
+        }
 
         val context = applicationContext
         val storage = Storage(context)
