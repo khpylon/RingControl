@@ -52,11 +52,13 @@
     <string name="tooltip_help">Press and hold a description for more information.</string>
     <string name="current_ring_state_icon">Current ring state icon</string>
     <string name="using_the_widget_title">Using the widget</string>
-    <string name="using_the_widget_instructions_part1">"First, enable permissions for Do Not Disturb
-        or Modes access to allow the ringer to be silenced (you can do this within the app by clicking on "</string>
+    <string name="using_the_widget_instructions_part1">First, enable permissions for \"Do Not
+        Disturb\" or \"Modes access\" to allow the ringer to be silenced (you can do this within
+        the app by clicking on </string>
     <string name="using_the_widget_instructions_part2">Second, be sure to place a widget on your
         home screen. Once you\'ve done this, just tap the widget to change the ring mode. The
-        widget will show which mode is active (normal, vibrate, or silent).</string>
+        widget will show which mode is active (normal, vibrate, or silent).
+        \n\nA double-tap on the widget opens the app.</string>
     <string name="using_calendar_title">Controlling the ring state with calendar events</string>
     <string name="using_calendar_part1">If you want your phone to enter modify the ring mode during
         events in your Google calendar, add either #RingControl# or #RC# to the event\'s title or

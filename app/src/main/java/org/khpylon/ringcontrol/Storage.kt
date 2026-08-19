@@ -11,6 +11,7 @@ object StorageConstants {
     const val RING_MODE = "ringMode"
     const val BG_COLOR = "bgColor"
     const val FG_COLOR = "fgColor"
+    const val CLICKS = "clicks"
     const val TEXT_DESCRIPTION = "textDescription"
     const val WIDGET_SCALE = "widgetScale"
     const val NEW_INSTALL = "newInstall"
@@ -164,6 +165,17 @@ class Storage(private val context: Context) {
             // Store data. you may also use putFloat(), putInt(), putLong() as requirement
             edit.putInt(StorageConstants.RING_STATUS, id)
             // Commit the changes
+            commitWait(edit)
+        }
+
+    var clicks: Int
+        get() {
+            val pref = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE)
+            return pref.getInt(StorageConstants.CLICKS, 0)
+        }
+        set(count) {
+            val edit = context.getSharedPreferences(StorageConstants.TAG, Context.MODE_PRIVATE).edit()
+            edit.putInt(StorageConstants.CLICKS, count)
             commitWait(edit)
         }
 

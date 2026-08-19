@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.AUDIO_SERVICE
+import android.content.Intent
 import android.graphics.Bitmap
 import android.media.AudioManager
 import android.graphics.Canvas
@@ -11,6 +12,7 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -44,6 +46,7 @@ import androidx.glance.layout.width
 import androidx.glance.layout.wrapContentSize
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class GlanceWidget : GlanceAppWidget() {
@@ -220,29 +223,45 @@ class GlanceWidgetCallback : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        updateAppWidgetState(context, glanceId) { prefs ->
-            val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
-            val currentMode = audioManager.ringerMode
-            var nextMode =
-                when (currentMode) {
-                    AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_SILENT
-                    AudioManager.RINGER_MODE_SILENT -> AudioManager.RINGER_MODE_VIBRATE
-                    else -> AudioManager.RINGER_MODE_NORMAL
-                }
+        CoroutineScope(Dispatchers.IO).launch {
+            val storage = Storage(context)
+            storage.clicks += 1
+            delay(333)
+            val clicks = storage.clicks
+            storage.clicks = 0
+            if (clicks == 1) {
+                updateAppWidgetState(context, glanceId) { prefs ->
+                    val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
+                    val currentMode = audioManager.ringerMode
+                    var nextMode =
+                        when (currentMode) {
+                            AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_SILENT
+                            AudioManager.RINGER_MODE_SILENT -> AudioManager.RINGER_MODE_VIBRATE
+                            else -> AudioManager.RINGER_MODE_NORMAL
+                        }
 
-            if (nextMode == AudioManager.RINGER_MODE_SILENT) {
-                val notificationManager =
-                    context.getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
-                if (!notificationManager.isNotificationPolicyAccessGranted) {
-                    nextMode = AudioManager.RINGER_MODE_VIBRATE
+                    if (nextMode == AudioManager.RINGER_MODE_SILENT) {
+                        val notificationManager =
+                            context.getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
+                        if (!notificationManager.isNotificationPolicyAccessGranted) {
+                            nextMode = AudioManager.RINGER_MODE_VIBRATE
+                        }
+                    }
+
+                    val lastState = prefs[GlanceWidget.updateKey] ?: false
+                    audioManager.ringerMode = nextMode
+                    prefs[GlanceWidget.updateKey] = !lastState
                 }
+                GlanceWidget().update(context, glanceId)
+            } else if (clicks == 2) {
+                val intent = Intent(context, MainActivity::class.java)
+                intent.flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                context.startActivity(intent)
+            } else {
+                Log.d(Constants.LOGTAG, "widget clicks = $clicks; ignored")
             }
-
-            val lastState = prefs[GlanceWidget.updateKey] ?: false
-            audioManager.ringerMode = nextMode
-            prefs[GlanceWidget.updateKey] = !lastState
         }
-        GlanceWidget().update(context, glanceId)
     }
 }
 
