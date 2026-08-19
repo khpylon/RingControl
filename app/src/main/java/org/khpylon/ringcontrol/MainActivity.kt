@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -184,22 +185,22 @@ class MainActivity : ComponentActivity() {
 
         // Update tracked state of calendar and notification permissions
         if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED
-            && storage.calendarPermission == StorageConstants.PERMISSION_GRANTED )
-        {
+            && storage.calendarPermission == StorageConstants.PERMISSION_GRANTED
+        ) {
             storage.calendarPermission = StorageConstants.PERMISSION_NOT_REQUESTED
         } else if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
-            && storage.calendarPermission != StorageConstants.PERMISSION_GRANTED )
-        {
+            && storage.calendarPermission != StorageConstants.PERMISSION_GRANTED
+        ) {
             storage.calendarPermission = StorageConstants.PERMISSION_GRANTED
         }
 
         if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-            && storage.notificationPermission == StorageConstants.PERMISSION_GRANTED )
-        {
+            && storage.notificationPermission == StorageConstants.PERMISSION_GRANTED
+        ) {
             storage.notificationPermission = StorageConstants.PERMISSION_DENIED
         } else if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-            && storage.notificationPermission != StorageConstants.PERMISSION_GRANTED )
-        {
+            && storage.notificationPermission != StorageConstants.PERMISSION_GRANTED
+        ) {
             storage.notificationPermission = StorageConstants.PERMISSION_GRANTED
         }
 
@@ -286,7 +287,7 @@ class MainActivity : ComponentActivity() {
 
                                         // find events for the next two weeks
                                         val time = LocalDateTime.now(ZoneId.systemDefault())
-                                        val events =
+                                        var events =
                                             ReadCalendars(context).readCalendar(
                                                 time,
                                                 60L * 24 * 14,
@@ -306,114 +307,140 @@ class MainActivity : ComponentActivity() {
                                             if (diff < CalendarConstants.INTERVAL * 60) {
                                                 storage.isPending = true
                                                 val title = events[0].title
-                                                Log.d(Constants.LOGTAG,"found new pending event '$title'")
+                                                Log.d(
+                                                    Constants.LOGTAG,
+                                                    "found new pending event '$title'"
+                                                )
                                                 val next =
                                                     events[0].alarmTime(time.atZone(ZoneId.systemDefault()))
                                                 CalendarAlarmReceiver.setAlarm(context, next)
                                             }
                                         }
 
-                                        itemsIndexed(events) { index, item ->
-                                            // Get Dark Mode Setting, then choose alternating colors for each row's background
-                                            val nightModeFlags =
-                                                context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-                                            val bgColor1 = ContextCompat.getColor(
-                                                context,
-                                                if (nightModeFlags == Configuration.UI_MODE_NIGHT_NO)
-                                                    R.color.white else R.color.black
-                                            )
-                                            val bgColor2 = ContextCompat.getColor(
-                                                context,
-                                                if (nightModeFlags == Configuration.UI_MODE_NIGHT_NO)
-                                                    R.color.white95percent else R.color.black20percent
-                                            )
+                                        // If there are events, display them.
+                                        if (!events.isEmpty()) {
+                                            itemsIndexed(events) { index, item ->
+                                                // Get Dark Mode Setting, then choose alternating colors for each row's background
+                                                val nightModeFlags =
+                                                    context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                                                val bgColor1 = ContextCompat.getColor(
+                                                    context,
+                                                    if (nightModeFlags == Configuration.UI_MODE_NIGHT_NO)
+                                                        R.color.white else R.color.black
+                                                )
+                                                val bgColor2 = ContextCompat.getColor(
+                                                    context,
+                                                    if (nightModeFlags == Configuration.UI_MODE_NIGHT_NO)
+                                                        R.color.white95percent else R.color.black20percent
+                                                )
 
-                                            Column(
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .background(
-                                                        color = Color(if (index % 2 == 1) bgColor1 else bgColor2),
-                                                        shape = RectangleShape
-                                                    )
-                                            )
-                                            {
-
-                                                // Event's title
-                                                Row {
-                                                    val title = item.title
-                                                    Text(
-                                                        title,
-                                                        Modifier
-                                                            .padding(horizontal = 8.dp),
-                                                        maxLines = 1,
-                                                        overflow = TextOverflow.Ellipsis
-                                                    )
-                                                }
-
-                                                // Event's time, and options if specified
-                                                Row {
-                                                    Spacer(
-                                                        modifier = Modifier
-                                                            .padding(horizontal = 8.dp)
-                                                    )
-                                                    val dateFormatter =
-                                                        DateTimeFormatter.ofLocalizedDate(
-                                                            FormatStyle.SHORT
+                                                Column(
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .background(
+                                                            color = Color(if (index % 2 == 1) bgColor1 else bgColor2),
+                                                            shape = RectangleShape
                                                         )
-                                                            .withLocale(LocalLocale.current.platformLocale)
-                                                    val is24Hour =
-                                                        android.text.format.DateFormat.is24HourFormat(
-                                                            context
+                                                )
+                                                {
+
+                                                    // Event's title
+                                                    Row {
+                                                        val title = item.title
+                                                        Text(
+                                                            title,
+                                                            Modifier
+                                                                .padding(horizontal = 8.dp),
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
                                                         )
-                                                    val timeFormatter =
-                                                        DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a")
-                                                    val date = item.beginTime.format(dateFormatter)
-                                                    val startTime =
-                                                        item.beginTime.format(timeFormatter)
-                                                    val endTime = item.endTime.format(timeFormatter)
-                                                    Text(
-                                                        text = "$date $startTime-$endTime",
-                                                        fontSize = 10.sp,
-                                                        modifier = Modifier
-                                                            .fillMaxWidth(0.85f)
-                                                            .padding(horizontal = 8.dp)
-                                                    )
+                                                    }
 
-                                                    // Notifications?
-                                                    var options = if (item.isNotify) "N" else ""
-                                                    // Vibrate instead of silent?
-                                                    if (item.isVibrate) {
-                                                        options += "V"
-                                                    }
-                                                    // Start earlier than the default?
-                                                    if (item.startOffset > 0) {
-                                                        val offset = item.startOffset
-                                                        options += "+$offset"
-                                                    }
-                                                    // If anu options are present, surround with parenthesis
-                                                    if (options.isNotEmpty()) {
-                                                        options = "($options)"
-                                                    }
-                                                    Text(
-                                                        text = options,
-                                                        fontSize = 10.sp,
-                                                    )
-                                                }
-
-                                                // Make note of repeating options.
-                                                if (item.isRepeating) {
+                                                    // Event's time, and options if specified
                                                     Row {
                                                         Spacer(
                                                             modifier = Modifier
                                                                 .padding(horizontal = 8.dp)
                                                         )
+                                                        val dateFormatter =
+                                                            DateTimeFormatter.ofLocalizedDate(
+                                                                FormatStyle.SHORT
+                                                            )
+                                                                .withLocale(LocalLocale.current.platformLocale)
+                                                        val is24Hour =
+                                                            android.text.format.DateFormat.is24HourFormat(
+                                                                context
+                                                            )
+                                                        val timeFormatter =
+                                                            DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a")
+                                                        val date =
+                                                            item.beginTime.format(dateFormatter)
+                                                        val startTime =
+                                                            item.beginTime.format(timeFormatter)
+                                                        val endTime =
+                                                            item.endTime.format(timeFormatter)
                                                         Text(
-                                                            text = getString(R.string.event_repeats),
+                                                            text = "$date $startTime-$endTime",
                                                             fontSize = 10.sp,
                                                             modifier = Modifier
+                                                                .fillMaxWidth(0.85f)
                                                                 .padding(horizontal = 8.dp)
                                                         )
+
+                                                        // Notifications?
+                                                        var options = if (item.isNotify) "N" else ""
+                                                        // Vibrate instead of silent?
+                                                        if (item.isVibrate) {
+                                                            options += "V"
+                                                        }
+                                                        // Start earlier than the default?
+                                                        if (item.startOffset > 0) {
+                                                            val offset = item.startOffset
+                                                            options += "+$offset"
+                                                        }
+                                                        // If anu options are present, surround with parenthesis
+                                                        if (options.isNotEmpty()) {
+                                                            options = "($options)"
+                                                        }
+                                                        Text(
+                                                            text = options,
+                                                            fontSize = 10.sp,
+                                                        )
                                                     }
+
+                                                    // Make note of repeating options.
+                                                    if (item.isRepeating) {
+                                                        Row {
+                                                            Spacer(
+                                                                modifier = Modifier
+                                                                    .padding(horizontal = 8.dp)
+                                                            )
+                                                            Text(
+                                                                text = getString(R.string.event_repeats),
+                                                                fontSize = 10.sp,
+                                                                modifier = Modifier
+                                                                    .padding(horizontal = 8.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Otherwise display a message explaining no events were found.
+                                        else {
+                                            items(
+                                                items = List(1) { getString(R.string.no_events_found_text) },
+                                            ) { item ->
+                                                Column(
+                                                    Modifier.fillMaxWidth()
+                                                )
+                                                {
+                                                    Text(
+                                                        item,
+                                                        Modifier
+                                                            .padding(horizontal = 8.dp)
+                                                    )
                                                 }
                                             }
                                         }
@@ -607,7 +634,7 @@ fun InfoDialog(
     dialogText: AnnotatedString,
     confirmText: String? = null,
     dismissText: String? = null,
-    ) {
+) {
     AlertDialog(
         icon = {
             Icon(Icons.Default.Info, contentDescription = "")
@@ -631,7 +658,7 @@ fun InfoDialog(
                         onConfirmRequest()
                     }
                 ) {
-                    Text( confirmText )
+                    Text(confirmText)
                 }
             }
         },
@@ -642,7 +669,7 @@ fun InfoDialog(
                         onDismissRequest()
                     }
                 ) {
-                    Text( dismissText )
+                    Text(dismissText)
                 }
             }
         }
@@ -1060,11 +1087,14 @@ fun MainApplication(
     // If most settings aren't enabled, start by displaying the Settings screen
     val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
     val batteryOptimized = pm.isIgnoringBatteryOptimizations(context.packageName)
-    val readCalendar = context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
-    var showSettings by rememberSaveable { mutableStateOf(
-        !notificationManager.isNotificationPolicyAccessGranted && !readCalendar
-        && !batteryOptimized
-    ) }
+    val readCalendar =
+        context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
+    var showSettings by rememberSaveable {
+        mutableStateOf(
+            !notificationManager.isNotificationPolicyAccessGranted && !readCalendar
+                    && !batteryOptimized
+        )
+    }
 
     var showText by rememberSaveable { mutableStateOf(storage.textDescription) }
 

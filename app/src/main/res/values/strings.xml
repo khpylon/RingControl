@@ -35,13 +35,17 @@
         widget when battery saving mode is enabled, and to react to calendar events in the background.
         To activate this, you must (1) enable \"Allow background usage\", and then (2) tap that text and
         select \"Unrestricted\".</string>
+    <string name="post_notifications_permission_title">Post Notifications Permission</string>
+    <string name="post_notifications_permission_text">This permission is needed for the app to
+        display a notification when a calendar event changes the ring mode.
+        Disabling this permission has no other effect.</string>
     <string name="calendar_tooltip">Silence the ringer for specific events in your calendar. Just
         add the text #RingControl# or #RC# in the event\'s title or description
         (to use vibration instead, use #RingControl/V# or #RC/V#).
         \n\nCalendar must be enabled in the app\'s permissions.  If the status shows "Denied",
         long press on the toggle to access the app\'s settings.</string>
     <string name="notification_tooltip">Show a notification when the app turns off the ringer.
-        \n\nNotifications must be en enabled in the app\'s permissions.  If the status dhows "Denied",
+        \n\nNotifications must be enabled in the app\'s permissions.  If the status shows "Denied",
         long press on the toggle to access the app\'s settings.</string>
     <string name="show_notifications_on_calendar_event">Calendar event notifications</string>
     <string name ="enabled_description">Enabled</string>
@@ -92,10 +96,9 @@
     <string name="app_version">"App version "</string>
     <string name="events_in_next_two_weeks">Events in next two weeks:</string>
     <string name="event_repeats">This event repeats.</string>
+    <string name="no_events_found_text">No events were found.</string>
     <string name="dismiss_button_text">Dismiss</string>
     <string name="try_again_button_text">Try again</string>
     <string name="not_requested">Not requested</string>
     <string name="denied">Denied (long press on toggle to change)</string>
-    <string name="post_notifications_permission_title">Post Notifications Permission</string>
-    <string name="post_notifications_permission_text">This permission is needed for the app to display a notification when a calendar event changes the ring mode.  Disabling this permission has no other effect.</string>
 </resources>
