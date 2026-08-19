@@ -48,6 +48,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class GlanceWidget : GlanceAppWidget() {
 
@@ -225,41 +226,62 @@ class GlanceWidgetCallback : ActionCallback {
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             val storage = Storage(context)
+
+            // count this click
             storage.clicks += 1
-            delay(333)
-            val clicks = storage.clicks
-            storage.clicks = 0
-            if (clicks == 1) {
-                updateAppWidgetState(context, glanceId) { prefs ->
-                    val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
-                    val currentMode = audioManager.ringerMode
-                    var nextMode =
-                        when (currentMode) {
-                            AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_SILENT
-                            AudioManager.RINGER_MODE_SILENT -> AudioManager.RINGER_MODE_VIBRATE
-                            else -> AudioManager.RINGER_MODE_NORMAL
-                        }
 
-                    if (nextMode == AudioManager.RINGER_MODE_SILENT) {
-                        val notificationManager =
-                            context.getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
-                        if (!notificationManager.isNotificationPolicyAccessGranted) {
-                            nextMode = AudioManager.RINGER_MODE_VIBRATE
+            // If this is the first click, start the wait.  Subsequent click don't need to continue
+            // executing the coroutine.
+            if (storage.clicks == 1) {
+
+                // Wait before doing anything (1/3 of a second)
+                delay(333.milliseconds)
+
+                // Save the current click count, then reset it
+                val clicks = storage.clicks
+                storage.clicks = 0
+
+                // If only one click was seen, update the widgets
+                when (clicks) {
+                    1 -> {
+                        updateAppWidgetState(context, glanceId) { prefs ->
+                            val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
+                            val currentMode = audioManager.ringerMode
+                            var nextMode =
+                                when (currentMode) {
+                                    AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_SILENT
+                                    AudioManager.RINGER_MODE_SILENT -> AudioManager.RINGER_MODE_VIBRATE
+                                    else -> AudioManager.RINGER_MODE_NORMAL
+                                }
+
+                            if (nextMode == AudioManager.RINGER_MODE_SILENT) {
+                                val notificationManager =
+                                    context.getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
+                                if (!notificationManager.isNotificationPolicyAccessGranted) {
+                                    nextMode = AudioManager.RINGER_MODE_VIBRATE
+                                }
+                            }
+
+                            val lastState = prefs[GlanceWidget.updateKey] ?: false
+                            audioManager.ringerMode = nextMode
+                            prefs[GlanceWidget.updateKey] = !lastState
                         }
+                        GlanceWidget().update(context, glanceId)
+
+                        // If two clicks were seen, open the app
                     }
+                    2 -> {
+                        val intent = Intent(context, MainActivity::class.java)
+                        intent.flags =
+                            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        context.startActivity(intent)
 
-                    val lastState = prefs[GlanceWidget.updateKey] ?: false
-                    audioManager.ringerMode = nextMode
-                    prefs[GlanceWidget.updateKey] = !lastState
+                        // Anything else is ignored
+                    }
+                    else -> {
+                        Log.d(Constants.LOGTAG, "widget clicks = $clicks; ignored")
+                    }
                 }
-                GlanceWidget().update(context, glanceId)
-            } else if (clicks == 2) {
-                val intent = Intent(context, MainActivity::class.java)
-                intent.flags =
-                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                context.startActivity(intent)
-            } else {
-                Log.d(Constants.LOGTAG, "widget clicks = $clicks; ignored")
             }
         }
     }
