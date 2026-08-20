@@ -23,6 +23,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -117,6 +118,8 @@ import java.time.format.FormatStyle
 import java.util.Locale
 import androidx.compose.ui.platform.LocalLocale
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.mikepenz.markdown.m3.Markdown
+import java.util.stream.Collectors
 
 // Thanks to https://stackoverflow.com/questions/67768746
 private inline fun Modifier.applyIf(
@@ -479,11 +482,37 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        InfoDialog(
-                            onDismissRequest = { displayWhatsNew = false },
-                            dialogTitle = stringResource(R.string.whats_new) + BuildConfig.VERSION_NAME,
-                            dialogText = message
-                        )
+//                        InfoDialog(
+//                            onDismissRequest = { displayWhatsNew = false },
+//                            dialogTitle = stringResource(R.string.whats_new) + BuildConfig.VERSION_NAME,
+//                            dialogText = message
+//                        )
+                        Dialog(onDismissRequest = { displayWhatsNew = false }) {
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth(0.95f)
+                                    .fillMaxHeight(0.65f)
+                                    .verticalScroll(rememberScrollState())
+                                    .border(width = 5.dp, color=Color.Black)
+
+                            )
+                            {
+
+                                val content = buildAnnotatedString {
+                                    description.forEach { text ->
+                                            append(text+"\n")
+                                    }
+                                }.toString()
+
+                                Markdown(
+                                    content = description,
+                                    modifier = Modifier
+                                        .padding(10.dp)
+
+                                )
+                            }
+                        }
                     }
 
                     // Display information about the app itself
@@ -751,19 +780,15 @@ private fun writeExternalFile(
 }
 
 //
-private fun readChangeFile(context: Context): List<String> {
+private fun readChangeFile(context: Context): String {
     val assetManager = context.assets
-    val message = mutableListOf<String>()
     try {
-        val inStream = assetManager.open("info.txt")
+        val inStream = assetManager.open("CHANGELOG.md")
         val reader = BufferedReader(InputStreamReader(inStream))
-        var line: String?
-        while (reader.readLine().also { line = it } != null) {
-            message.add(line!!)
-        }
+        return reader.lines().collect(Collectors.joining("\n"))
     } catch (_: Exception) {
+        return ""
     }
-    return message
 }
 
 @Composable

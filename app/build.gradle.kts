@@ -73,6 +73,8 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.material.icons.core)
     implementation(libs.google.rfc.x445)
+    implementation(libs.markdown.renderer)
+    implementation(libs.markdown.renderer.m3)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
