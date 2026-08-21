@@ -18,7 +18,7 @@
     <string name="silent_description">Silent</string>
     <string name="changes_saved">Widget changes saved.</string>
     <string name="logcat_crashfile_formatstring">Logcat crash file \"{0}.txt\" copied to Download folder.</string>
-    <string name="whats_new">"What's new in "</string>
+    <string name="whats_new">"**What's new in** "</string>
     <string name="enable_mode_description">Enable mode description</string>
     <string name="widget_size">Widget size</string>
     <string name="save_button">Save</string>
@@ -101,4 +101,5 @@
     <string name="try_again_button_text">Try again</string>
     <string name="not_requested">Not requested</string>
     <string name="denied">Denied (long press on toggle to change)</string>
+    <string name="view_prior_release_notes_button">View prior release notes</string>
 </resources>

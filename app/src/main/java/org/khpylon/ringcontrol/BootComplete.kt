@@ -10,10 +10,19 @@ class BootComplete : BroadcastReceiver() {
         if (action.equals(Intent.ACTION_BOOT_COMPLETED, ignoreCase = true) ||
             action.equals(Intent.ACTION_MY_PACKAGE_REPLACED, ignoreCase = true) )
         {
+
+            // When a new version of the app is loaded
             if (action.equals(Intent.ACTION_MY_PACKAGE_REPLACED, ignoreCase = true) )
             {
-                Storage(context).newInstall = true
+
+                // Save the prior app version for reference
+                val storage = Storage(context)
+                storage.updateAppVersion()
+
+                // Display the release notes when app is opened
+                storage.newInstall = true
             }
+
             if (Storage(context).isCalendarEnabled) {
                 CalendarAlarmReceiver.checkForEvents(context)
             }

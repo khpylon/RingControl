@@ -23,7 +23,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,7 +53,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -80,15 +78,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -290,7 +284,7 @@ class MainActivity : ComponentActivity() {
 
                                         // find events for the next two weeks
                                         val time = LocalDateTime.now(ZoneId.systemDefault())
-                                        var events =
+                                        val events =
                                             ReadCalendars(context).readCalendar(
                                                 time,
                                                 60L * 24 * 14,
@@ -453,64 +447,65 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    // If the app has been updated, display a dialog explaining changes
-                    if (displayWhatsNew) {
+                    var viewFullNotes by remember { mutableStateOf(false) }
+
+                    // Display a dialog explaining changes (this is done automatically when a new
+                    // version of the app is loaded).
+                    if (displayWhatsNew || viewFullNotes) {
                         storage.newInstall = false
-                        val description = readChangeFile(context)
 
-                        // Create a bullet list from each line of text.  Props to
-                        // https://stackoverflow.com/questions/70724196 for the hint.
-                        val bulletString = "\u2022\t"
-                        val textStyle = LocalTextStyle.current
-                        val textMeasurer = rememberTextMeasurer()
-                        val bulletStringWidth = remember(textStyle, textMeasurer) {
-                            textMeasurer.measure(
-                                text = bulletString,
-                                style = textStyle
-                            ).size.width
-                        }
-                        val restLine =
-                            with(LocalDensity.current) { bulletStringWidth.toSp() }
-                        val paragraphStyle =
-                            ParagraphStyle(textIndent = TextIndent(restLine = restLine))
-                        val message = buildAnnotatedString {
-                            description.forEach { text ->
-                                withStyle(style = paragraphStyle) {
-                                    append(bulletString)
-                                    append(text)
-                                }
-                            }
+                        // Read the change log
+                        val fullRelease = readChangeFile(context)
+
+                        // Locate just the first entry
+                        val lastAppVersion = storage.lastAppVersion
+                        val latestRelease =
+                        try {
+                             getString(R.string.whats_new) +
+                                    fullRelease.substring(
+                                        0,
+                                        fullRelease.indexOf("\n**"+ lastAppVersion)-3
+                                    )
+                        } catch (_ : StringIndexOutOfBoundsException) {
+                            fullRelease
                         }
 
-//                        InfoDialog(
-//                            onDismissRequest = { displayWhatsNew = false },
-//                            dialogTitle = stringResource(R.string.whats_new) + BuildConfig.VERSION_NAME,
-//                            dialogText = message
-//                        )
-                        Dialog(onDismissRequest = { displayWhatsNew = false }) {
+                        Dialog(onDismissRequest = {
+                            displayWhatsNew = false
+                            viewFullNotes = false
+                        }) {
                             Surface(
                                 shape = RoundedCornerShape(20.dp),
                                 modifier = Modifier
                                     .fillMaxWidth(0.95f)
                                     .fillMaxHeight(0.65f)
                                     .verticalScroll(rememberScrollState())
-                                    .border(width = 5.dp, color=Color.Black)
-
                             )
                             {
-
-                                val content = buildAnnotatedString {
-                                    description.forEach { text ->
-                                            append(text+"\n")
+                                Column {
+                                    Markdown(
+                                        content = if (viewFullNotes) fullRelease else latestRelease,
+                                        modifier = Modifier
+                                            .padding(10.dp)
+                                    )
+                                    if (!viewFullNotes) {
+                                        val buttonColors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = MaterialTheme.colorScheme.background
+                                        )
+                                        Button(
+                                            onClick = {
+                                                viewFullNotes = true
+                                            },
+                                            colors = buttonColors,
+                                            shape = RoundedCornerShape(10.dp),
+                                            modifier = Modifier
+                                                .align(alignment = Alignment.CenterHorizontally)
+                                        ) {
+                                            Text(stringResource(R.string.view_prior_release_notes_button))
+                                        }
                                     }
-                                }.toString()
-
-                                Markdown(
-                                    content = description,
-                                    modifier = Modifier
-                                        .padding(10.dp)
-
-                                )
+                                }
                             }
                         }
                     }
@@ -779,7 +774,7 @@ private fun writeExternalFile(
     return outputFilename
 }
 
-//
+// Read the changelog file into a string.
 private fun readChangeFile(context: Context): String {
     val assetManager = context.assets
     try {
