@@ -452,6 +452,12 @@ class MainActivity : ComponentActivity() {
                     // Display a dialog explaining changes (this is done automatically when a new
                     // version of the app is loaded).
                     if (displayWhatsNew || viewFullNotes) {
+
+                        // If this is the first time loading the app, update the app version info
+                        if (storage.newInstall) {
+                            storage.updateAppVersion()
+                        }
+
                         storage.newInstall = false
 
                         // Read the change log
@@ -459,16 +465,18 @@ class MainActivity : ComponentActivity() {
 
                         // Locate just the first entry
                         val lastAppVersion = storage.lastAppVersion
+                        Log.d(Constants.LOGTAG, "lastAppVersion is $lastAppVersion")
                         val latestRelease =
                         try {
                              getString(R.string.whats_new) +
                                     fullRelease.substring(
                                         0,
-                                        fullRelease.indexOf("\n**"+ lastAppVersion)-3
+                                        fullRelease.indexOf("**"+ lastAppVersion)-4
                                     )
                         } catch (_ : StringIndexOutOfBoundsException) {
                             fullRelease
                         }
+
 
                         Dialog(onDismissRequest = {
                             displayWhatsNew = false

@@ -3,6 +3,7 @@ package org.khpylon.ringcontrol
 import android.content.Context
 import android.content.SharedPreferences
 import android.media.AudioManager
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 
@@ -125,11 +126,12 @@ class Storage(private val context: Context) {
         val lastAppVersion = pref.getString(StorageConstants.CURRENT_APP_VERSION, StorageConstants.FIRST_APP_VERSION).toString()
         edit.putString(StorageConstants.LAST_APP_VERSION, lastAppVersion)
 
+        val buildVersion = BuildConfig.VERSION_NAME
         // Make sure there's no ".debug" on end of current version string
-        val currentAppVersion = if (BuildConfig.VERSION_NAME.endsWith(".debug"))
-            BuildConfig.VERSION_NAME.substring(BuildConfig.VERSION_NAME.length-6)
+        val currentAppVersion = if (buildVersion.endsWith(".debug"))
+            buildVersion.substring(buildVersion.length-6)
         else
-            BuildConfig.VERSION_NAME
+            buildVersion
 
         // Save the current version
         edit.putString(StorageConstants.CURRENT_APP_VERSION, currentAppVersion)

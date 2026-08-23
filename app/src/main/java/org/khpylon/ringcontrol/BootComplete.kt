@@ -14,12 +14,8 @@ class BootComplete : BroadcastReceiver() {
             // When a new version of the app is loaded
             if (action.equals(Intent.ACTION_MY_PACKAGE_REPLACED, ignoreCase = true) )
             {
-
-                // Save the prior app version for reference
-                val storage = Storage(context)
-                storage.updateAppVersion()
-
                 // Display the release notes when app is opened
+                val storage = Storage(context)
                 storage.newInstall = true
             }
 
