@@ -230,6 +230,8 @@ class GlanceWidgetCallback : ActionCallback {
             // count this click
             storage.clicks += 1
 
+            Log.d(Constants.LOGTAG, "click detected, count = " + storage.clicks)
+
             // If this is the first click, start the wait.  Subsequent click don't need to continue
             // executing the coroutine.
             if (storage.clicks == 1) {
@@ -240,6 +242,7 @@ class GlanceWidgetCallback : ActionCallback {
                 // Save the current click count, then reset it
                 val clicks = storage.clicks
                 storage.clicks = 0
+                Log.d(Constants.LOGTAG, "clearing click counter")
 
                 // If only one click was seen, update the widgets
                 when (clicks) {
@@ -282,6 +285,9 @@ class GlanceWidgetCallback : ActionCallback {
                         Log.d(Constants.LOGTAG, "widget clicks = $clicks; ignored")
                     }
                 }
+            } else if (storage.clicks > 3) {
+                Log.d(Constants.LOGTAG, "uh-oh, resetting click counter")
+                storage.clicks = 0
             }
         }
     }
