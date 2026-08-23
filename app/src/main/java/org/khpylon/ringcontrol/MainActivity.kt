@@ -468,7 +468,7 @@ class MainActivity : ComponentActivity() {
                         Log.d(Constants.LOGTAG, "lastAppVersion is $lastAppVersion")
                         val latestRelease =
                         try {
-                             getString(R.string.whats_new) +
+                             getString(R.string.recent_changes) +
                                     fullRelease.substring(
                                         0,
                                         fullRelease.indexOf("**"+ lastAppVersion)-4
