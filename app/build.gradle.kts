@@ -11,8 +11,8 @@ android {
         applicationId = "org.khpylon.ringcontrol"
         minSdk = 30
         targetSdk = 36
-        versionCode = 17
-        versionName = "2026.08.18-10"
+        versionCode = 18
+        versionName = "2026.08.23-12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -26,7 +26,7 @@ android {
             )
             isDebuggable = true
             applicationIdSuffix = ".debug"
-            versionNameSuffix = ".debug"
+//            versionNameSuffix = ".debug"
         }
         release {
             isMinifyEnabled = false

@@ -1,9 +1,13 @@
+**2026.08.23-12**
+- Double-clicking on the widget now opens the app.
+- Change how release notes are displayed.
+---
 **2026.08.18-10**
-- Avoid silencing the ringer when permissions are not allowed.  In this case, the app will only switch to vibrate mode.
+- When ringer permissions are not granted by the user, only switch to vibrate mode.
 ---
 **2026.08.10-08**
 - Clean up logic handling active calendar events.
-- Set an alarm is a new event is discovered when listing events for the user.
+- Set an alarm if a new event is discovered when listing events for the user.
 ---
 **2026.08.07-08**
 - Fix issue with calendar events not changing ringer mode on Android 17.
