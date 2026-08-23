@@ -1,7 +1,7 @@
-**2026.08.18-10 (this release)**
+**2026.08.18-10**
 - Avoid silencing the ringer when permissions are not allowed.  In this case, the app will only switch to vibrate mode.
 ---
-**2026.08.07-08**
+**2026.08.10-08**
 - Clean up logic handling active calendar events.
 - Set an alarm is a new event is discovered when listing events for the user.
 ---
