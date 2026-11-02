@@ -48,6 +48,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.time.Duration.Companion.milliseconds
 
 class GlanceWidget : GlanceAppWidget() {
@@ -191,7 +193,7 @@ class GlanceWidget : GlanceAppWidget() {
             // Assemble the icon
             val drawable = AppCompatResources.getDrawable(context, icon) as Drawable
             val bitmap = drawIcon(
-                drawable, storage.foregroundColor, storage.backgroundColor,label
+                drawable, storage.foregroundColor, storage.backgroundColor, label
             )
 
             val size = LocalSize.current
@@ -227,28 +229,47 @@ class GlanceWidgetCallback : ActionCallback {
         CoroutineScope(Dispatchers.IO).launch {
             val storage = Storage(context)
 
-            // count this click
-            storage.clicks += 1
+            val mutex = Mutex()
+            // Process this click.  In case there's an issue with the shared preferences not updating
+            // immediately, set the local variable with the correct value before writing.  And
+            // never recognize more than two click.
+            val ogClicks: Int
+            mutex.withLock {
+                ogClicks = if (storage.clicks < 2) {
+                    storage.clicks + 1
+                } else {
+                    2
+                }
+                storage.clicks = ogClicks
+            }
 
-            Log.d(Constants.LOGTAG, "click detected, count = " + storage.clicks)
+            Log.d(Constants.LOGTAG, "click detected, count = $ogClicks")
 
             // If this is the first click, start the wait.  Subsequent click don't need to continue
             // executing the coroutine.
-            if (storage.clicks == 1) {
+            if (ogClicks == 1) {
 
                 // Wait before doing anything (1/3 of a second)
                 delay(333.milliseconds)
 
                 // Save the current click count, then reset it
-                val clicks = storage.clicks
-                storage.clicks = 0
+                val clicks: Int
+                mutex.withLock {
+                    clicks = storage.clicks
+                    storage.clicks = 0
+                }
                 Log.d(Constants.LOGTAG, "clearing click counter")
 
                 // If only one click was seen, update the widgets
                 when (clicks) {
+                    0 -> {
+                        Log.d(Constants.LOGTAG, "widget clicks = 0; how?")
+                    }
+
                     1 -> {
                         updateAppWidgetState(context, glanceId) { prefs ->
-                            val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
+                            val audioManager =
+                                context.getSystemService(AUDIO_SERVICE) as AudioManager
                             val currentMode = audioManager.ringerMode
                             var nextMode =
                                 when (currentMode) {
@@ -273,21 +294,15 @@ class GlanceWidgetCallback : ActionCallback {
 
                         // If two clicks were seen, open the app
                     }
-                    2 -> {
+
+                    else -> {
                         val intent = Intent(context, MainActivity::class.java)
                         intent.flags =
                             Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         context.startActivity(intent)
-
-                        // Anything else is ignored
-                    }
-                    else -> {
-                        Log.d(Constants.LOGTAG, "widget clicks = $clicks; ignored")
+                        Log.d(Constants.LOGTAG, "double-click detected")
                     }
                 }
-            } else if (storage.clicks > 3) {
-                Log.d(Constants.LOGTAG, "uh-oh, resetting click counter")
-                storage.clicks = 0
             }
         }
     }
