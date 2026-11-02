@@ -11,8 +11,8 @@ android {
         applicationId = "org.khpylon.ringcontrol"
         minSdk = 30
         targetSdk = 36
-        versionCode = 18
-        versionName = "2026.08.23-12"
+        versionCode = 19
+        versionName = "2026.11.02-14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -26,7 +26,6 @@ android {
             )
             isDebuggable = true
             applicationIdSuffix = ".debug"
-//            versionNameSuffix = ".debug"
         }
         release {
             isMinifyEnabled = false
@@ -79,7 +78,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-//    androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }

@@ -1,3 +1,6 @@
+**2026.11.02-14**
+- Improve reliability of widget double-clicks.
+---
 **2026.08.23-12**
 - Double-clicking on the widget now opens the app.
 - Change how release notes are displayed.
@@ -27,7 +30,7 @@
 - Change placement of mode description on the widget.
 ---
 **2025.10.06-10**
-- Allow calender events to silence ringer; just add #RC# or #RingControl# to the title or description of an event.
+- Allow calendar events to silence ringer; just add #RC# or #RingControl# to the title or description of an event.
 - Add setting to change battery optimization.
 - Reorganize main screen to switch between widget appearance controls and permission settings.
 - New logo for the app.
